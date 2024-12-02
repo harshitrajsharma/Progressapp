@@ -1,0 +1,178 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid()) @map("_id")
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid()) @map("_id")
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid()) @map("_id")
+  name          String?
+  email         String?   @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  subjects      Subject[]
+  dashboard     Dashboard?
+  mockTests     MockTest[]
+  examName      String?   // Added exam name
+  examDate      DateTime? // Added exam date
+  targetScore   Int?      // Target score percentage
+  totalMarks    Int?      // Total marks in the exam
+  targetMarks   Int?      // Target marks in the exam
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid()) @map("_id")
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Subject {
+  id               String    @id @default(cuid()) @map("_id")
+  name             String    
+  weightage        Float     // GATE subject weightage
+  expectedMarks    Float     // Expected marks based on progress
+  foundationLevel  String    // Beginner, Moderate, Advanced
+  overallProgress  Float     @default(0)  // Overall subject progress
+  learningProgress Float     @default(0)  // Learning progress
+  revisionProgress Float     @default(0)  // Revision progress
+  practiceProgress Float     @default(0)  // Practice progress
+  testProgress     Float     @default(0)  // Test progress
+  position         Int       @default(0)  // Position for drag-and-drop ordering
+  chapters         Chapter[]
+  tests           Test[]
+  mockTests       MockTest[]
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Chapter {
+  id               String   @id @default(cuid()) @map("_id")
+  name             String
+  important        Boolean  @default(false)
+  overallProgress  Float    @default(0)  // Overall chapter progress
+  learningProgress Float    @default(0)  // Learning progress
+  revisionProgress Float    @default(0)  // Revision progress
+  practiceProgress Float    @default(0)  // Practice progress
+  testProgress     Float    @default(0)  // Test progress
+  topics           Topic[]
+  subjectId        String
+  subject          Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([subjectId])
+}
+
+model Topic {
+  id              String    @id @default(cuid()) @map("_id")
+  name            String
+  important       Boolean   @default(false)
+  learningStatus  Boolean   @default(false)  // Single checkmark
+  revisionCount   Int       @default(0)      // Progress out of 3
+  practiceCount   Int       @default(0)      // Progress out of 3
+  testCount       Int       @default(0)      // Progress out of 3
+  position        Int       @default(0)      // Position in the chapter's topic list
+  lastRevised     DateTime?
+  nextRevision    DateTime?
+  chapterId       String
+  chapter         Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([chapterId])
+}
+
+model Test {
+  id          String   @id @default(cuid()) @map("_id")
+  name        String
+  score       Float    // Percentage score
+  totalMarks  Int
+  marksScored Float
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([subjectId])
+}
+
+model Dashboard {
+  id                     String   @id @default(cuid()) @map("_id")
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  overallProgress        Float    @default(0)  // Overall preparation progress
+  learningProgress       Float    @default(0)  // Overall learning progress
+  revisionProgress      Float    @default(0)  // Overall revision progress
+  practiceProgress      Float    @default(0)  // Overall practice progress
+  testProgress         Float    @default(0)  // Overall test progress
+  currentScore         Float    // Current average score
+  predictedScore       Float    // Predicted final score
+  expectedAIR          Int?     // Expected All India Rank
+  completedChapters    Int      @default(0)
+  totalChapters        Int      @default(0)
+  timeRequired         Int      // Estimated hours needed to complete syllabus
+  lastUpdated          DateTime @updatedAt
+}
+
+model MockTest {
+  id          String   @id @default(cuid()) @map("_id")
+  name        String
+  score       Float    // Percentage score
+  totalMarks  Int
+  marksScored Float
+  subjectId   String
+  userId      String
+  testDate    DateTime
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+} 
+
