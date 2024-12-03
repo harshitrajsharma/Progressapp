@@ -12,7 +12,7 @@ import { ChapterCategories, ChapterCategory } from "@/components/subjects/chapte
 import { useToast } from "@/hooks/use-toast";
 import { useTopicManagement } from "@/hooks/use-topic-management";
 import { calculateSubjectProgress } from "@/lib/calculations";
-import { SubjectWithRelations, SubjectProgress, ChapterWithRelations } from "@/lib/calculations/types";
+import { SubjectWithRelations, SubjectProgress } from "@/lib/calculations/types";
 import { Skeleton } from "@/components/ui/skeleton";
 
 // Increase cache duration to 30 seconds for better performance
@@ -57,7 +57,7 @@ export default function SubjectPage() {
   const progress = useMemo(() => {
     if (!subject || !subjectId) return null;
 
-    const cached = progressCache.get(Array.isArray(subjectId) ? subjectId[0] : subjectId);
+    const cached = progressCache.get(subjectId);
     const now = Date.now();
 
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
@@ -65,7 +65,7 @@ export default function SubjectPage() {
     }
 
     const newProgress = calculateSubjectProgress(subject);
-    progressCache.set(Array.isArray(subjectId) ? subjectId[0] : subjectId, {
+    progressCache.set(subjectId, {
       progress: newProgress,
       timestamp: now
     });
@@ -314,41 +314,6 @@ export default function SubjectPage() {
     }
   }, [toast]);
 
-  const handleChapterDelete = useCallback(async (chapterId: string) => {
-    if (!subject) return;
-    
-    try {
-      const response = await fetch(`/api/subjects/${subject.id}/chapters/${chapterId}`, {
-        method: 'DELETE',
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to delete chapter');
-      }
-
-      setSubject(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          chapters: prev.chapters.filter(chapter => chapter.id !== chapterId)
-        };
-      });
-
-      toast({
-        title: "Success",
-        description: "Chapter deleted successfully",
-        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
-      });
-    } catch (error) {
-      console.error('Error deleting chapter:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete chapter. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }, [subject, toast]);
-
   // Fetch subject data
   useEffect(() => {
     async function fetchSubject() {
@@ -418,7 +383,7 @@ export default function SubjectPage() {
 
         <div className="space-y-4">
           {filteredChapters.length === 0 ? (
-            <EmptyChapters subjectId={subject.id} onSuccess={handleAddChapter} />
+            <EmptyChapters subjectId={subject.id} />
           ) : (
             <Suspense fallback={
               <div className="space-y-4">
@@ -438,7 +403,6 @@ export default function SubjectPage() {
                   important={chapter.important}
                   onTopicToggle={(topicId, checkboxIndex) => handleTopicToggle(chapter.id, topicId, checkboxIndex)}
                   onEdit={handleChapterEdit}
-                  onDelete={() => handleChapterDelete(chapter.id)}
                   onAddTopic={handleAddTopic}
                   onUpdateTopic={handleTopicUpdate}
                   onDeleteTopic={handleTopicDelete}
