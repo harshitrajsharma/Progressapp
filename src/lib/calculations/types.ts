@@ -16,9 +16,9 @@ export interface SubjectWithRelations extends Subject {
 }
 
 // Progress types
-export interface ProgressDetail {
-  total: number
-  completed: number
+export interface ProgressStats {
+  totalTopics: number
+  completedTopics: number
   percentage: number
 }
 
@@ -31,18 +31,24 @@ export interface TopicProgress {
 
 export interface ChapterProgress extends TopicProgress {
   overall: number
-  totalTopics: number
-  completedTopics: number
+  stats: {
+    learning: ProgressStats
+    revision: ProgressStats
+    practice: ProgressStats
+    test: ProgressStats
+  }
 }
 
 export interface SubjectProgress extends TopicProgress {
   overall: number
-  totalChapters: number
-  completedChapters: number
-  totalTopics: number
-  completedTopics: number
+  foundationLevel: FoundationLevel
   expectedMarks: number
-  testAverage: number
+  stats: {
+    learning: ProgressStats
+    revision: ProgressStats
+    practice: ProgressStats
+    test: ProgressStats
+  }
 }
 
 // Foundation Level

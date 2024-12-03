@@ -19,10 +19,9 @@ import {
 
 interface SidebarProps {
   isCollapsed: boolean;
-  onToggle: () => void;
 }
 
-export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+export function Sidebar({ isCollapsed }: SidebarProps) {
   const pathname = usePathname();
 
   return (
@@ -42,7 +41,11 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
           variant="ghost"
           size="icon"
           className="h-8 w-8 shrink-0"
-          onClick={onToggle}
+          onClick={() => {
+            const newState = !isCollapsed;
+            localStorage.setItem('sidebarCollapsed', String(newState));
+            window.dispatchEvent(new Event('storage'));
+          }}
         >
           <ChevronLeft
             className={cn(
@@ -59,7 +62,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start gap-2",
-              pathname === "/dashboard" && "bg-secondary"
+              pathname?.startsWith("/dashboard") && "bg-secondary"
             )}
           >
             <BarChart3 className="h-5 w-5 text-blue-500" />
@@ -71,7 +74,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start gap-2",
-              pathname === "/subjects" && "bg-secondary"
+              pathname?.startsWith("/subjects") && "bg-secondary"
             )}
           >
             <BookOpen className="h-5 w-5 text-green-500" />
@@ -83,7 +86,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start gap-2",
-              pathname === "/tests" && "bg-secondary"
+              pathname?.startsWith("/tests") && "bg-secondary"
             )}
           >
             <TestTube className="h-5 w-5 text-purple-500" />
@@ -95,7 +98,7 @@ export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
             variant="ghost"
             className={cn(
               "w-full justify-start gap-2",
-              pathname === "/settings" && "bg-secondary"
+              pathname?.startsWith("/settings") && "bg-secondary"
             )}
           >
             <Settings className="h-5 w-5 text-orange-500" />
@@ -128,7 +131,7 @@ export function MobileSidebar() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0">
-        <Sidebar isCollapsed={false} onToggle={() => {}} />
+        <Sidebar isCollapsed={false} />
       </SheetContent>
     </Sheet>
   );

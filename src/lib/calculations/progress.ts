@@ -4,8 +4,26 @@ import {
   ChapterProgress, 
   SubjectProgress,
   ChapterWithRelations,
-  SubjectWithRelations
+  SubjectWithRelations,
+  ProgressStats,
+  FoundationLevel
 } from "./types"
+
+/**
+ * Safely get topics array from a chapter
+ */
+function getSafeTopics(chapter: any): Topic[] {
+  if (!chapter) return [];
+  return Array.isArray(chapter.topics) ? chapter.topics : [];
+}
+
+/**
+ * Safely get chapters array from a subject
+ */
+function getSafeChapters(subject: any): any[] {
+  if (!subject) return [];
+  return Array.isArray(subject.chapters) ? subject.chapters : [];
+}
 
 /**
  * Calculate progress for a single topic across all study modes
@@ -13,9 +31,27 @@ import {
 export function calculateTopicProgress(topic: Topic): TopicProgress {
   return {
     learning: topic.learningStatus ? 100 : 0,
-    revision: (topic.revisionCount / 3) * 100,
-    practice: (topic.practiceCount / 3) * 100,
-    test: (topic.testCount / 3) * 100
+    revision: Math.min(100, (topic.revisionCount / 3) * 100),
+    practice: Math.min(100, (topic.practiceCount / 3) * 100),
+    test: Math.min(100, (topic.testCount / 3) * 100)
+  }
+}
+
+/**
+ * Calculate if a topic is completed for a specific category
+ */
+export function isTopicCompletedForCategory(topic: Topic, category: 'learning' | 'revision' | 'practice' | 'test'): boolean {
+  switch (category) {
+    case 'learning':
+      return topic.learningStatus;
+    case 'revision':
+      return topic.revisionCount >= 3;
+    case 'practice':
+      return topic.practiceCount >= 3;
+    case 'test':
+      return topic.testCount >= 3;
+    default:
+      return false;
   }
 }
 
@@ -23,20 +59,68 @@ export function calculateTopicProgress(topic: Topic): TopicProgress {
  * Calculate if a topic is fully completed
  */
 export function isTopicCompleted(topic: Topic): boolean {
-  const progress = calculateTopicProgress(topic)
-  return (
-    progress.learning === 100 &&
-    progress.revision === 100 &&
-    progress.practice === 100 &&
-    progress.test === 100
-  )
+  return isTopicCompletedForCategory(topic, 'learning') &&
+         isTopicCompletedForCategory(topic, 'revision') &&
+         isTopicCompletedForCategory(topic, 'practice') &&
+         isTopicCompletedForCategory(topic, 'test');
+}
+
+/**
+ * Calculate progress stats for a specific category
+ */
+export function calculateProgressStats(
+  topics: Topic[], 
+  category: 'learning' | 'revision' | 'practice' | 'test'
+): ProgressStats {
+  const totalTopics = topics.length;
+  const completedTopics = topics.filter(topic => isTopicCompletedForCategory(topic, category)).length;
+
+  return {
+    totalTopics,
+    completedTopics,
+    percentage: totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0
+  };
+}
+
+/**
+ * Calculate foundation level based on weighted progress
+ */
+export function calculateFoundationLevel(progress: {
+  learning: number;
+  revision: number;
+  practice: number;
+  test: number;
+}): FoundationLevel {
+  // Weighted calculation (Learning: 40%, Others: 20% each)
+  const weightedProgress = 
+    (progress.learning * 0.4) +
+    (progress.revision * 0.2) +
+    (progress.practice * 0.2) +
+    (progress.test * 0.2);
+
+  if (weightedProgress >= 80) return "Advanced";
+  if (weightedProgress >= 50) return "Moderate";
+  return "Beginner";
+}
+
+/**
+ * Calculate expected marks based on test performance
+ */
+export function calculateExpectedMarks(subject: SubjectWithRelations): number {
+  const tests = Array.isArray(subject.tests) ? subject.tests : [];
+  if (tests.length === 0) return 0;
+
+  const testAverage = tests.reduce((acc, test) => acc + test.score, 0) / tests.length;
+  return Math.round((subject.weightage * testAverage) / 100);
 }
 
 /**
  * Calculate progress for a chapter including all its topics
  */
 export function calculateChapterProgress(chapter: ChapterWithRelations): ChapterProgress {
-  const totalTopics = chapter.topics.length
+  const topics = getSafeTopics(chapter);
+  const totalTopics = topics.length;
+  
   if (totalTopics === 0) {
     return {
       learning: 0,
@@ -44,13 +128,17 @@ export function calculateChapterProgress(chapter: ChapterWithRelations): Chapter
       practice: 0,
       test: 0,
       overall: 0,
-      totalTopics: 0,
-      completedTopics: 0
+      stats: {
+        learning: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        revision: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        practice: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        test: { totalTopics: 0, completedTopics: 0, percentage: 0 }
+      }
     }
   }
 
   // Calculate progress for each mode
-  const modeProgress = chapter.topics.reduce(
+  const modeProgress = topics.reduce(
     (acc, topic) => {
       const progress = calculateTopicProgress(topic)
       return {
@@ -65,126 +153,111 @@ export function calculateChapterProgress(chapter: ChapterWithRelations): Chapter
 
   // Convert to percentages
   const progress = {
-    learning: modeProgress.learning / totalTopics,
-    revision: modeProgress.revision / totalTopics,
-    practice: modeProgress.practice / totalTopics,
-    test: modeProgress.test / totalTopics
+    learning: Math.min(100, modeProgress.learning / totalTopics),
+    revision: Math.min(100, modeProgress.revision / totalTopics),
+    practice: Math.min(100, modeProgress.practice / totalTopics),
+    test: Math.min(100, modeProgress.test / totalTopics)
   }
 
-  // Calculate overall progress (80% from modes, 20% from test scores)
-  const modesProgress = (
-    progress.learning +
+  // Calculate stats for each category
+  const stats = {
+    learning: calculateProgressStats(topics, 'learning'),
+    revision: calculateProgressStats(topics, 'revision'),
+    practice: calculateProgressStats(topics, 'practice'),
+    test: calculateProgressStats(topics, 'test')
+  };
+
+  // Calculate overall progress (equal weight for all modes)
+  const overall = Math.min(100,
+    (progress.learning +
     progress.revision +
     progress.practice +
-    progress.test
-  ) / 4
-
-  const completedTopics = chapter.topics.filter(isTopicCompleted).length
+    progress.test) / 4
+  );
 
   return {
     ...progress,
-    overall: modesProgress,
-    totalTopics,
-    completedTopics
+    overall,
+    stats
   }
+}
+
+/**
+ * Calculate test average for a subject
+ */
+function calculateTestAverage(subject: SubjectWithRelations): number {
+  const tests = Array.isArray(subject.tests) ? subject.tests : [];
+  if (tests.length === 0) return 0;
+  return tests.reduce((acc, test) => acc + test.score, 0) / tests.length;
 }
 
 /**
  * Calculate progress for a subject including all chapters and tests
  */
 export function calculateSubjectProgress(subject: SubjectWithRelations): SubjectProgress {
-  const totalChapters = subject.chapters.length;
-  const totalTopics = subject.chapters.reduce(
-    (acc, chapter) => acc + chapter.topics.length,
-    0
-  );
-
-  if (totalChapters === 0) {
+  const chapters = getSafeChapters(subject);
+  const allTopics = chapters.flatMap(chapter => getSafeTopics(chapter));
+  
+  if (allTopics.length === 0) {
     return {
       learning: 0,
       revision: 0,
       practice: 0,
       test: 0,
       overall: 0,
-      totalChapters: 0,
-      completedChapters: 0,
-      totalTopics: 0,
-      completedTopics: 0,
+      foundationLevel: "Beginner",
       expectedMarks: 0,
-      testAverage: 0
-    };
+      stats: {
+        learning: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        revision: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        practice: { totalTopics: 0, completedTopics: 0, percentage: 0 },
+        test: { totalTopics: 0, completedTopics: 0, percentage: 0 }
+      }
+    }
   }
 
-  // Calculate total completed topics for each mode
-  const chaptersProgress = subject.chapters.reduce(
-    (acc, chapter) => {
-      // Count completed topics for each mode
-      const completedLearning = chapter.topics.filter(t => t.learningStatus).length;
-      const revisionCount = chapter.topics.reduce((sum, t) => sum + t.revisionCount, 0);
-      const practiceCount = chapter.topics.reduce((sum, t) => sum + t.practiceCount, 0);
-      const testCount = chapter.topics.reduce((sum, t) => sum + t.testCount, 0);
-      const totalTopicsInChapter = chapter.topics.length;
-
-      return {
-        learning: acc.learning + completedLearning,
-        revision: acc.revision + revisionCount,
-        practice: acc.practice + practiceCount,
-        test: acc.test + testCount,
-        completedTopics: acc.completedTopics + chapter.topics.filter(t => 
-          t.learningStatus && 
-          t.revisionCount >= 3 && 
-          t.practiceCount >= 3 && 
-          t.testCount >= 3
-        ).length,
-        totalTopics: acc.totalTopics + totalTopicsInChapter
-      };
-    },
-    { learning: 0, revision: 0, practice: 0, test: 0, completedTopics: 0, totalTopics: 0 }
-  );
-
-  // Convert to percentages
-  const progress = {
-    learning: (chaptersProgress.learning / totalTopics) * 100,
-    revision: (chaptersProgress.revision / (totalTopics * 3)) * 100,
-    practice: (chaptersProgress.practice / (totalTopics * 3)) * 100,
-    test: (chaptersProgress.test / (totalTopics * 3)) * 100
+  // Calculate progress stats for each category
+  const stats = {
+    learning: calculateProgressStats(allTopics, 'learning'),
+    revision: calculateProgressStats(allTopics, 'revision'),
+    practice: calculateProgressStats(allTopics, 'practice'),
+    test: calculateProgressStats(allTopics, 'test')
   };
 
-  // Calculate test average with safe access
-  const tests = subject.tests || [];
-  const testAverage = tests.length > 0
-    ? tests.reduce((acc, test) => acc + test.score, 0) / tests.length
-    : 0;
+  // Calculate percentages for each mode
+  const progress = {
+    learning: stats.learning.percentage,
+    revision: stats.revision.percentage,
+    practice: stats.practice.percentage,
+    test: stats.test.percentage
+  };
 
-  // Calculate overall progress (80% from modes, 20% from tests)
-  const modesProgress = (
-    progress.learning +
+  // Calculate study modes progress (80% of total)
+  const modesProgress = Math.min(100,
+    (progress.learning +
     progress.revision +
     progress.practice +
-    progress.test
-  ) / 4 * 0.8; // 80% weight
+    progress.test) / 4
+  ) * 0.8; // 80% weight for study modes
 
-  const testProgress = testAverage * 0.2; // 20% weight
+  // Calculate test performance progress (20% of total)
+  const testAverage = calculateTestAverage(subject);
+  const testProgress = testAverage * 0.2; // 20% weight for test performance
 
-  const completedChapters = subject.chapters.filter(chapter => {
-    const chapterProgress = calculateChapterProgress(chapter);
-    return chapterProgress.learning === 100 &&
-           chapterProgress.revision === 100 &&
-           chapterProgress.practice === 100 &&
-           chapterProgress.test === 100;
-  }).length;
+  // Calculate overall progress
+  const overall = Math.min(100, modesProgress + testProgress);
 
-  // Calculate expected marks based on weightage and test average
-  const expectedMarks = (subject.weightage * testAverage) / 100;
+  // Calculate foundation level based on weighted progress
+  const foundationLevel = calculateFoundationLevel(progress);
+
+  // Calculate expected marks based on test performance only
+  const expectedMarks = calculateExpectedMarks(subject);
 
   return {
     ...progress,
-    overall: modesProgress + testProgress,
-    totalChapters,
-    completedChapters,
-    totalTopics,
-    completedTopics: chaptersProgress.completedTopics,
+    overall,
+    foundationLevel,
     expectedMarks,
-    testAverage
-  };
+    stats
+  }
 } 

@@ -80,6 +80,22 @@ export async function PATCH(
         ...(typeof practiceCount === 'number' && { practiceCount }),
         ...(typeof testCount === 'number' && { testCount }),
       },
+      // Include all fields in the response
+      select: {
+        id: true,
+        name: true,
+        important: true,
+        learningStatus: true,
+        revisionCount: true,
+        practiceCount: true,
+        testCount: true,
+        chapterId: true,
+        position: true,
+        lastRevised: true,
+        nextRevision: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
 
     // After updating the topic, recalculate chapter progress
@@ -200,52 +216,66 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const chapterId = topic.chapterId;
+
     // Delete the topic
     await prisma.topic.delete({
       where: { id: topicId },
     });
 
     // Recalculate chapter progress after topic deletion
-    const chapter = await prisma.chapter.findUnique({
-      where: { id: topic.chapterId },
+    const updatedChapter = await prisma.chapter.findUnique({
+      where: { id: chapterId },
       include: {
         topics: true,
       },
     });
 
-    if (chapter) {
-      const totalTopics = chapter.topics.length;
+    if (updatedChapter) {
+      const totalTopics = updatedChapter.topics.length;
       if (totalTopics > 0) {
         // Calculate learning progress
-        const completedLearning = chapter.topics.filter(t => t.learningStatus).length;
+        const completedLearning = updatedChapter.topics.filter(t => t.learningStatus).length;
         const learning = Math.round((completedLearning / totalTopics) * 100);
 
         // For revision/practice/test - each topic has 3 checkboxes
         const maxChecksPerCategory = totalTopics * 3;
 
         // Calculate revision progress
-        const totalRevisionChecks = chapter.topics.reduce((acc, t) => acc + t.revisionCount, 0);
+        const totalRevisionChecks = updatedChapter.topics.reduce((acc, t) => acc + t.revisionCount, 0);
         const revision = Math.round((totalRevisionChecks / maxChecksPerCategory) * 100);
 
         // Calculate practice progress
-        const totalPracticeChecks = chapter.topics.reduce((acc, t) => acc + t.practiceCount, 0);
+        const totalPracticeChecks = updatedChapter.topics.reduce((acc, t) => acc + t.practiceCount, 0);
         const practice = Math.round((totalPracticeChecks / maxChecksPerCategory) * 100);
 
         // Calculate test progress
-        const totalTestChecks = chapter.topics.reduce((acc, t) => acc + t.testCount, 0);
+        const totalTestChecks = updatedChapter.topics.reduce((acc, t) => acc + t.testCount, 0);
         const test = Math.round((totalTestChecks / maxChecksPerCategory) * 100);
 
         // Overall progress
         const overall = Math.round((learning + revision + practice + test) / 4);
 
         await prisma.chapter.update({
-          where: { id: topic.chapterId },
+          where: { id: chapterId },
           data: {
             learningProgress: learning,
             revisionProgress: revision,
             practiceProgress: practice,
             testProgress: test,
             overallProgress: overall,
+          },
+        });
+      } else {
+        // If no topics left, reset all progress
+        await prisma.chapter.update({
+          where: { id: chapterId },
+          data: {
+            learningProgress: 0,
+            revisionProgress: 0,
+            practiceProgress: 0,
+            testProgress: 0,
+            overallProgress: 0,
           },
         });
       }

@@ -14,9 +14,11 @@ export const config = {
     "/dashboard/:path*",
     "/subjects/:path*",
     "/mock-tests/:path*",
+    "/tests/:path*",
     "/dashboard",
     "/subjects",
     "/mock-tests",
+    "/tests",
     "/onboarding"
   ],
 } 

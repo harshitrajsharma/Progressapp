@@ -51,7 +51,14 @@ export async function PATCH(
     }
 
     // Update topic based on mode
-    const updateData: any = {};
+    const updateData: {
+      learningStatus?: boolean;
+      revisionCount?: number;
+      lastRevised?: Date | null;
+      nextRevision?: Date;
+      practiceCount?: number;
+      testCount?: number;
+    } = {};
     switch (mode) {
       case "learning":
         updateData.learningStatus = count > 0;

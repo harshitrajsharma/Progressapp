@@ -36,7 +36,6 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     transform,
     transition,
     isDragging,
-    over,
   } = useSortable({ id: subject.id })
 
   const style = {

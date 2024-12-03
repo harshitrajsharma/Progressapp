@@ -118,24 +118,62 @@ export async function GET(
       },
       include: {
         chapters: {
+          orderBy: {
+            createdAt: 'asc'
+          },
           include: {
-            topics: true,
+            topics: {
+              orderBy: {
+                position: 'asc'
+              }
+            },
           },
         },
+        tests: {
+          orderBy: {
+            createdAt: 'desc'
+          }
+        }
       },
     })
 
-    return NextResponse.json(subject)
+    if (!subject) {
+      return new NextResponse(
+        JSON.stringify({ message: "Subject not found" }), 
+        { status: 404, headers: { 'Content-Type': 'application/json' } }
+      )
+    }
+
+    const response = {
+      ...subject,
+      chapters: subject.chapters.map(chapter => ({
+        ...chapter,
+        topics: chapter.topics || []
+      })),
+      tests: subject.tests || []
+    }
+
+    return NextResponse.json(response)
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "Subject not found") {
-        return new NextResponse("Subject not found", { status: 404 })
+        return new NextResponse(
+          JSON.stringify({ message: "Subject not found" }), 
+          { status: 404, headers: { 'Content-Type': 'application/json' } }
+        )
       }
       if (error.message === "Unauthorized") {
-        return new NextResponse("Unauthorized", { status: 403 })
+        return new NextResponse(
+          JSON.stringify({ message: "Unauthorized" }), 
+          { status: 403, headers: { 'Content-Type': 'application/json' } }
+        )
       }
     }
 
-    return new NextResponse("Internal Error", { status: 500 })
+    console.error('Error fetching subject:', error)
+    return new NextResponse(
+      JSON.stringify({ message: "Internal server error" }), 
+      { status: 500, headers: { 'Content-Type': 'application/json' } }
+    )
   }
 } 

@@ -1,0 +1,76 @@
+import { Card } from "@/components/ui/card"
+import { Info, LucideIcon } from "lucide-react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { cn } from "@/lib/utils"
+import { memo } from "react"
+
+interface StatCardProps {
+  label: string;
+  value: string | number;
+  subValue?: string;
+  icon?: LucideIcon;
+  iconColor?: string;
+  tooltipText?: string;
+  valueColor?: string;
+  className?: string;
+  variant?: 'default' | 'outline';
+  transitionDuration?: number;
+}
+
+function StatCardComponent({ 
+  label, 
+  value, 
+  subValue,
+  icon: Icon,
+  iconColor = "text-muted-foreground",
+  tooltipText,
+  valueColor,
+  className,
+  variant = 'default'
+}: StatCardProps) {
+  return (
+    <Card className={cn(
+      "p-4",
+      variant === 'outline' && "border-2",
+      className
+    )}>
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-muted-foreground">{label}</span>
+          {tooltipText ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{tooltipText}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : Icon && (
+            <Icon className={cn("h-4 w-4", iconColor)} />
+          )}
+        </div>
+        <div className="flex items-baseline gap-1">
+          <span className={cn(
+            "text-2xl font-bold",
+            valueColor
+          )}>
+            {value}
+          </span>
+          {subValue && (
+            <span className="text-muted-foreground">{subValue}</span>
+          )}
+        </div>
+      </div>
+    </Card>
+  );
+}
+
+export const StatCard = memo(StatCardComponent); 

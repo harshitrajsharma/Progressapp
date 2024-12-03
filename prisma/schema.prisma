@@ -48,6 +48,9 @@ model User {
   subjects      Subject[]
   dashboard     Dashboard?
   mockTests     MockTest[]
+  studyStreak   StudyStreak?
+  dailyActivities DailyActivity[]
+  studyGoals    StudyGoal[]
   examName      String?   // Added exam name
   examDate      DateTime? // Added exam date
   targetScore   Int?      // Target score percentage
@@ -174,5 +177,48 @@ model MockTest {
 
   @@index([userId])
   @@index([subjectId])
+}
+
+model StudyStreak {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currentStreak Int      @default(0)
+  longestStreak Int      @default(0)
+  lastStudyDate DateTime
+  dailyGoals    Int      @default(0)  // Minutes or hours
+  dailyProgress Int      @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model DailyActivity {
+  id          String   @id @default(cuid()) @map("_id")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime
+  studyTime   Int      // Minutes studied
+  topicsCount Int      // Topics covered
+  testsCount  Int      // Tests taken
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([date])
+}
+
+model StudyGoal {
+  id          String   @id @default(cuid()) @map("_id")
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type        String   // Daily, Weekly, Monthly
+  target      Int      // Target value
+  current     Int      // Current progress
+  startDate   DateTime
+  endDate     DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 } 
 

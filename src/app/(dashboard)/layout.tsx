@@ -13,28 +13,23 @@ export default function DashboardLayout({
   children,
 }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const savedState = localStorage.getItem('sidebarCollapsed');
       setIsCollapsed(savedState === 'true');
-      setIsLoaded(true);
+
+      const handleStorage = () => {
+        const newState = localStorage.getItem('sidebarCollapsed') === 'true';
+        setIsCollapsed(newState);
+      };
+
+      window.addEventListener('storage', handleStorage);
+      return () => window.removeEventListener('storage', handleStorage);
     } catch (error) {
       console.error('Error accessing localStorage:', error);
-      setIsLoaded(true);
     }
   }, []);
-
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        localStorage.setItem('sidebarCollapsed', String(isCollapsed));
-      } catch (error) {
-        console.error('Error saving to localStorage:', error);
-      }
-    }
-  }, [isCollapsed, isLoaded]);
 
   return (
     <div className="flex h-screen overflow-hidden">
@@ -42,10 +37,7 @@ export default function DashboardLayout({
         "hidden md:flex h-screen flex-col border-r bg-background transition-all duration-300 sticky top-0",
         isCollapsed ? "w-[80px]" : "w-[280px]"
       )}>
-        <Sidebar 
-          isCollapsed={isCollapsed}
-          onToggle={() => setIsCollapsed(!isCollapsed)}
-        />
+        <Sidebar isCollapsed={isCollapsed} />
       </aside>
       <div className="flex-1 flex flex-col h-screen overflow-auto">
         <Header />

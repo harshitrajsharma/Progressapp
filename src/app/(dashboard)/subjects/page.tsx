@@ -5,13 +5,14 @@ import { Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { AddSubjectButton } from "@/components/subjects/add-subject-button";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectCardSkeleton } from "@/components/subjects/subject-card-skeleton";
+import { SearchSubjects } from "@/components/subjects/search-subjects";
 import { SubjectWithRelations } from "@/lib/calculations/types";
 import { calculateSubjectProgress } from "@/lib/calculations";
 import { useSubjects } from "@/hooks/use-subjects";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSubjectReorder } from '@/hooks/use-subject-reorder'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface CategorizedSubjects {
   notStarted: SubjectWithRelations[];
@@ -19,7 +20,11 @@ interface CategorizedSubjects {
   completed: SubjectWithRelations[];
 }
 
-function SubjectsGrid() {
+interface SubjectsGridProps {
+  searchQuery: string;
+}
+
+function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
   const { subjects, error, isLoading } = useSubjects();
   const { handleReorder } = useSubjectReorder();
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -59,6 +64,17 @@ function SubjectsGrid() {
     setActiveId(null);
   };
 
+  // Filter subjects based on search query
+  const filteredSubjects = useMemo(() => {
+    if (!subjects) return [];
+    if (!searchQuery.trim()) return subjects;
+
+    const query = searchQuery.toLowerCase();
+    return subjects.filter(subject => 
+      subject.name.toLowerCase().includes(query)
+    );
+  }, [subjects, searchQuery]);
+
   if (error) {
     return (
       <div className="flex items-center justify-center p-6 text-destructive gap-2">
@@ -88,7 +104,7 @@ function SubjectsGrid() {
     );
   }
 
-  const categorizedSubjects = subjects.reduce<CategorizedSubjects>(
+  const categorizedSubjects = filteredSubjects.reduce<CategorizedSubjects>(
     (acc: CategorizedSubjects, subject: SubjectWithRelations) => {
       const progress = calculateSubjectProgress(subject);
       const learningProgress = progress.learning;
@@ -121,7 +137,7 @@ function SubjectsGrid() {
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2">
               <Clock className="h-5 w-5 text-blue-500" />
-              <h3 className="text-lg font-semibold text-blue-500">In Progress</h3>
+              <h3 className="text-xl font-bold text-blue-500">In Progress</h3>
             </div>
             <SortableContext 
               items={categorizedSubjects.inProgress.map(s => s.id)} 
@@ -145,7 +161,7 @@ function SubjectsGrid() {
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2">
               <AlertCircle className="h-5 w-5 text-red-500" />
-              <h3 className="text-lg font-semibold text-red-500">Not Started</h3>
+              <h3 className="text-xl font-bold text-red-500">Not Started</h3>
             </div>
             <SortableContext items={categorizedSubjects.notStarted.map(s => s.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -162,7 +178,7 @@ function SubjectsGrid() {
           <div className="space-y-3 sm:space-y-4">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-green-500" />
-              <h3 className="text-lg font-semibold text-green-500">Completed</h3>
+              <h3 className="text-xl font-bold text-green-500">Completed</h3>
             </div>
             <SortableContext items={categorizedSubjects.completed.map(s => s.id)} strategy={verticalListSortingStrategy}>
               <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -197,16 +213,22 @@ function getSubjectCategory(subject: SubjectWithRelations): 'in-progress' | 'not
 }
 
 export default function SubjectsPage() {
+  const [searchQuery, setSearchQuery] = useState("");
+
   return (
     <div className="h-full flex-1 flex-col space-y-6 sm:space-y-8 p-2 sm:p-4 flex">
-      <div className="flex items-center justify-between space-y-2">
-        <div>
-          <h2 className="text-2xl font-bold tracking-tight">Subjects</h2>
-          <p className="text-muted-foreground">
-            Manage your subjects and track your progress
-          </p>
+      <div className="space-y-1">
+        <h1 className="text-3xl font-bold tracking-tight">Subjects</h1>
+        <p className="text-muted-foreground">
+          Manage your GATE CSE 2025 subjects and track progress
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2 sm:gap-4 w-full">
+        <SearchSubjects onSearch={setSearchQuery} />
+        <div className="scale-90 sm:scale-100">
+          <AddSubjectButton />
         </div>
-        <AddSubjectButton />
       </div>
 
       <Suspense fallback={
@@ -218,7 +240,7 @@ export default function SubjectsPage() {
           </div>
         </div>
       }>
-        <SubjectsGrid />
+        <SubjectsGrid searchQuery={searchQuery} />
       </Suspense>
     </div>
   );

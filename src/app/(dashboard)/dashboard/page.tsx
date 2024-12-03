@@ -4,11 +4,23 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { withRetry } from "@/lib/db"
 import Loading from "@/components/loading"
-import { CountdownSection } from "@/components/dashboard/countdown-section"
+import { EnhancedCountdown } from "@/components/dashboard/enhanced-countdown"
 import { CompetitiveAnalysis } from "@/components/dashboard/competitive-analysis"
+import { QuickStats } from "@/components/dashboard/quick-stats"
+import { StudyTimer } from "@/components/dashboard/study-timer"
 import { redirect } from "next/navigation"
+import { User, MockTest, DailyActivity, StudyStreak } from "@prisma/client"
+import { SubjectWithRelations } from "@/lib/calculations/types"
+import { calculateDashboardStats } from "@/lib/calculations/dashboard"
 
-async function getDashboardData(email: string) {
+interface DashboardUser extends User {
+  mockTests: MockTest[];
+  studyStreak: StudyStreak | null;
+  subjects: SubjectWithRelations[];
+  dailyActivities: DailyActivity[];
+}
+
+async function getDashboardData(email: string): Promise<DashboardUser | null> {
   return await withRetry(async () => {
     const user = await prisma.user.findUnique({
       where: { email },
@@ -17,12 +29,25 @@ async function getDashboardData(email: string) {
           include: {
             tests: true,
             mockTests: true,
+            chapters: {
+              include: {
+                topics: true,
+                subject: true
+              }
+            }
           }
         },
         mockTests: {
           orderBy: {
             createdAt: 'desc'
           }
+        },
+        studyStreak: true,
+        dailyActivities: {
+          orderBy: {
+            date: 'desc'
+          },
+          take: 7 // Last 7 days
         }
       },
     })
@@ -50,6 +75,13 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
     ? mockTestScores[mockTestScores.length - 1]
     : 0
 
+  const dashboardStats = calculateDashboardStats(
+    user.subjects,
+    user.dailyActivities,
+    user.studyStreak,
+    user.mockTests
+  )
+
   return (
     <div className="space-y-8">
       <div>
@@ -59,16 +91,27 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
         </p>
       </div>
 
-      <CountdownSection 
-        examDate={user.examDate} 
-        examName={user.examName} 
-      />
+      <div className="grid gap-8 md:grid-cols-[1fr,300px]">
+        <div className="space-y-8">
+          <EnhancedCountdown 
+            examDate={user.examDate} 
+            examName={user.examName} 
+          />
 
-      <CompetitiveAnalysis
-        currentScore={currentScore}
-        targetScore={user.targetScore || 0}
-        mockTestScores={mockTestScores}
-      />
+          <QuickStats stats={dashboardStats} />
+
+          <CompetitiveAnalysis
+            currentScore={currentScore}
+            targetScore={user.targetScore || 0}
+            mockTestScores={mockTestScores}
+          />
+        </div>
+
+        <div className="space-y-8">
+          <StudyTimer />
+          {/* More sidebar components will go here */}
+        </div>
+      </div>
     </div>
   )
 } 
