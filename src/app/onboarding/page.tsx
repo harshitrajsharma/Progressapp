@@ -91,7 +91,7 @@ export default function OnboardingPage() {
         <CardHeader>
           <CardTitle>Welcome to GATE Progress!</CardTitle>
           <CardDescription>
-            Let's set up your exam preferences to get started
+            Let&rsquo;s set up your exam preferences to get started
           </CardDescription>
         </CardHeader>
         <CardContent>

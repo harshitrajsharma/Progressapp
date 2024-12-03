@@ -1,0 +1,135 @@
+'use client';
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { signOut } from "next-auth/react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  ChevronLeft,
+  GraduationCap,
+  BarChart3,
+  BookOpen,
+  TestTube,
+  Settings,
+  LogOut,
+  Menu,
+} from "lucide-react";
+
+interface SidebarProps {
+  isCollapsed: boolean;
+  onToggle: () => void;
+}
+
+export function Sidebar({ isCollapsed, onToggle }: SidebarProps) {
+  const pathname = usePathname();
+
+  return (
+    <div className="flex h-full flex-col gap-4 p-4">
+      <div className="flex h-[60px] items-center px-2">
+        <Link 
+          href="/dashboard" 
+          className={cn(
+            "flex items-center gap-2 font-semibold",
+            isCollapsed ? "justify-center" : "flex-1"
+          )}
+        >
+          <GraduationCap className="h-7 w-7 text-blue-500" />
+          {!isCollapsed && <span>GATE CSE</span>}
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          onClick={onToggle}
+        >
+          <ChevronLeft
+            className={cn(
+              "h-4 w-4 transition-transform",
+              isCollapsed && "rotate-180"
+            )}
+          />
+        </Button>
+      </div>
+
+      <div className="flex flex-1 flex-col gap-2">
+        <Link href="/dashboard">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2",
+              pathname === "/dashboard" && "bg-secondary"
+            )}
+          >
+            <BarChart3 className="h-5 w-5 text-blue-500" />
+            {!isCollapsed && <span>Dashboard</span>}
+          </Button>
+        </Link>
+        <Link href="/subjects">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2",
+              pathname === "/subjects" && "bg-secondary"
+            )}
+          >
+            <BookOpen className="h-5 w-5 text-green-500" />
+            {!isCollapsed && <span>Subjects</span>}
+          </Button>
+        </Link>
+        <Link href="/tests">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2",
+              pathname === "/tests" && "bg-secondary"
+            )}
+          >
+            <TestTube className="h-5 w-5 text-purple-500" />
+            {!isCollapsed && <span>Tests</span>}
+          </Button>
+        </Link>
+        <Link href="/settings">
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-2",
+              pathname === "/settings" && "bg-secondary"
+            )}
+          >
+            <Settings className="h-5 w-5 text-orange-500" />
+            {!isCollapsed && <span>Settings</span>}
+          </Button>
+        </Link>
+      </div>
+
+      <div className="flex flex-col gap-2">
+        <Button
+          variant="ghost"
+          className="w-full justify-start gap-2 hover:bg-destructive/10 hover:text-destructive"
+          onClick={() => signOut()}
+        >
+          <LogOut className="h-5 w-5 text-red-500" />
+          {!isCollapsed && <span>Log out</span>}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export function MobileSidebar() {
+  return (
+    <Sheet>
+      <SheetTrigger asChild>
+        <Button variant="ghost" size="icon" className="md:hidden">
+          <Menu className="h-6 w-6" />
+          <span className="sr-only">Open Menu</span>
+        </Button>
+      </SheetTrigger>
+      <SheetContent side="left" className="p-0">
+        <Sidebar isCollapsed={false} onToggle={() => {}} />
+      </SheetContent>
+    </Sheet>
+  );
+} 

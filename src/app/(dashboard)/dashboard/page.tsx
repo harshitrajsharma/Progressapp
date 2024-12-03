@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { withRetry } from "@/lib/db"
-import ErrorBoundary from "@/components/error-boundary"
 import Loading from "@/components/loading"
 import { CountdownSection } from "@/components/dashboard/countdown-section"
 import { CompetitiveAnalysis } from "@/components/dashboard/competitive-analysis"
@@ -36,11 +35,9 @@ export default async function DashboardPage() {
   if (!session?.user?.email) redirect("/auth/signin")
 
   return (
-    <ErrorBoundary>
-      <Suspense fallback={<Loading />}>
-        <DashboardContent userEmail={session.user.email} />
-      </Suspense>
-    </ErrorBoundary>
+    <Suspense fallback={<Loading />}>
+      <DashboardContent userEmail={session.user.email} />
+    </Suspense>
   )
 }
 
@@ -48,18 +45,17 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
   const user = await getDashboardData(userEmail)
   if (!user?.examName || !user.examDate) redirect("/onboarding")
 
-  // Calculate current score from mock tests
   const mockTestScores = user.mockTests.map(test => test.score)
   const currentScore = mockTestScores.length > 0
     ? mockTestScores[mockTestScores.length - 1]
     : 0
 
   return (
-    <div className="space-y-8 p-8">
+    <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
         <p className="text-muted-foreground">
-          Here's an overview of your {user.examName} preparation
+          Here&apos;s an overview of your {user.examName} preparation
         </p>
       </div>
 
@@ -73,8 +69,6 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
         targetScore={user.targetScore || 0}
         mockTestScores={mockTestScores}
       />
-      
-      {/* We'll add more sections here */}
     </div>
   )
 } 
