@@ -20,11 +20,19 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
   const inputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
+  // Focus input when component mounts
   useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus();
     }
   }, []);
+
+  // Keep focus after state updates
+  useEffect(() => {
+    if (!isSubmitting && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [isSubmitting, topicName]);
 
   const handleSubmit = async () => {
     const trimmedName = topicName.trim();
@@ -67,7 +75,7 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
       // Show success message with the topic name
       toast({
         title: "Topic Added",
-        description: `"${trimmedName}" has been added successfully.`,
+        description: `"${trimmedName}" has been added successfully. Keep typing to add more topics.`,
         className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
       });
 
@@ -84,10 +92,6 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
       });
     } finally {
       setIsSubmitting(false);
-      // Ensure input is focused after adding topic
-      if (inputRef.current) {
-        inputRef.current.focus();
-      }
     }
   };
 
@@ -113,7 +117,7 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
       <div className="flex items-center gap-2">
         <Input
           ref={inputRef}
-          placeholder="Type topic name and press Enter to add multiple topics"
+          placeholder="Start typing topic name and press Enter to add quickly"
           className={cn(
             "flex-1 transition-colors",
             isSubmitting && "opacity-70"
@@ -123,6 +127,7 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
           onKeyDown={handleKeyDown}
           autoComplete="off"
           autoFocus
+          disabled={isSubmitting}
         />
         <div className="flex gap-2">
           <Button
@@ -144,7 +149,7 @@ export function AddTopicInput({ chapterId, onAddTopic, onClose }: AddTopicInputP
             onClick={onClose}
             disabled={isSubmitting}
           >
-            Cancel
+            Done
           </Button>
         </div>
       </div>

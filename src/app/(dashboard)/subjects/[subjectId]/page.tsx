@@ -19,10 +19,46 @@ import { Skeleton } from "@/components/ui/skeleton";
 const CACHE_DURATION = 30000;
 const progressCache = new Map<string, { progress: SubjectProgress; timestamp: number }>();
 
+interface ChapterWithRelations {
+  id: string;
+  name: string;
+  important: boolean;
+  learningProgress: number;
+  revisionProgress: number;
+  practiceProgress: number;
+  testProgress: number;
+  overallProgress: number;
+  topics: Topic[];
+  position: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 interface TopicUpdateData {
   name?: string;
   important?: boolean;
   position?: number;
+}
+
+interface Topic {
+  id: string;
+  name: string;
+  important: boolean;
+  learningStatus: boolean;
+  revisionCount: number;
+  practiceCount: number;
+  testCount: number;
+  chapterId: string;
+  position: number;
+  lastRevised: Date | null;
+  nextRevision: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface TopicResponse {
+  success: boolean;
+  topic: Topic;
 }
 
 // Loading skeleton component
@@ -47,6 +83,7 @@ const MemoizedChapterCard = memo(ChapterCard);
 
 export default function SubjectPage() {
   const { subjectId } = useParams();
+  const actualSubjectId = Array.isArray(subjectId) ? subjectId[0] : subjectId;
   const [subject, setSubject] = useState<SubjectWithRelations | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<ChapterCategory>('learning');
@@ -55,9 +92,9 @@ export default function SubjectPage() {
 
   // Memoize progress calculation with increased cache duration
   const progress = useMemo(() => {
-    if (!subject || !subjectId) return null;
+    if (!subject || !actualSubjectId) return null;
 
-    const cached = progressCache.get(subjectId);
+    const cached = progressCache.get(actualSubjectId);
     const now = Date.now();
 
     if (cached && (now - cached.timestamp) < CACHE_DURATION) {
@@ -65,13 +102,13 @@ export default function SubjectPage() {
     }
 
     const newProgress = calculateSubjectProgress(subject);
-    progressCache.set(subjectId, {
+    progressCache.set(actualSubjectId, {
       progress: newProgress,
       timestamp: now
     });
 
     return newProgress;
-  }, [subject, subjectId]);
+  }, [subject, actualSubjectId]);
 
   // Memoize chapters based on selected category
   const filteredChapters = useMemo(() => {
@@ -251,7 +288,63 @@ export default function SubjectPage() {
     });
   }, [toast]);
 
+  const handleChapterDelete = useCallback(async (chapterId: string) => {
+    if (!subject) return;
+
+    try {
+      const response = await fetch(`/api/subjects/${subject.id}/chapters/${chapterId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete chapter');
+      }
+
+      setSubject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          chapters: prev.chapters.filter(chapter => chapter.id !== chapterId)
+        };
+      });
+
+      toast({
+        title: "Success",
+        description: "Chapter deleted successfully",
+        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+      });
+    } catch (error) {
+      console.error('Error deleting chapter:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete chapter. Please try again.",
+        variant: "destructive",
+      });
+      throw error; // Re-throw the error so the loading state is cleared
+    }
+  }, [subject, toast]);
+
   const handleTopicUpdate = useCallback(async (chapterId: string, topicId: string, data: TopicUpdateData) => {
+    // Optimistic update
+    setSubject(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        chapters: prev.chapters.map(chapter => 
+          chapter.id === chapterId
+            ? {
+                ...chapter,
+                topics: chapter.topics.map(t =>
+                  t.id === topicId
+                    ? { ...t, ...data }
+                    : t
+                )
+              }
+            : chapter
+        )
+      };
+    });
+
     try {
       const response = await fetch(`/api/topics/${topicId}`, {
         method: 'PATCH',
@@ -265,52 +358,65 @@ export default function SubjectPage() {
         throw new Error('Failed to update topic');
       }
 
-      const updatedTopic = await response.json();
-
+      const result: TopicResponse = await response.json();
+      
+      // Update with server response if different from optimistic update
       setSubject(prev => {
         if (!prev) return prev;
         return {
           ...prev,
-          chapters: prev.chapters.map(chapter => {
-            if (chapter.id !== chapterId) return chapter;
-            
-            if ('position' in data) {
-              const topics = [...chapter.topics];
-              const oldIndex = topics.findIndex(t => t.id === topicId);
-              const newIndex = data.position!;
-              
-              if (oldIndex !== -1) {
-                const [movedTopic] = topics.splice(oldIndex, 1);
-                topics.splice(newIndex, 0, movedTopic);
-                
-                return {
+          chapters: prev.chapters.map(chapter => 
+            chapter.id === chapterId
+              ? {
                   ...chapter,
-                  topics: topics.map((t, index) => ({
-                    ...t,
-                    position: index
-                  }))
-                };
-              }
-            }
-            
-            return {
-              ...chapter,
-              topics: chapter.topics.map(topic =>
-                topic.id === topicId ? { ...topic, ...updatedTopic } : topic
-              )
-            };
-          })
+                  topics: chapter.topics.map(t =>
+                    t.id === topicId ? result.topic : t
+                  )
+                }
+              : chapter
+          )
         };
       });
 
-      return updatedTopic;
+      toast({
+        title: "Success",
+        description: "Topic updated successfully",
+        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+      });
+
+      return result;
     } catch (error) {
+      // Revert optimistic update on error
       console.error('Error updating topic:', error);
+      setSubject(prev => {
+        if (!prev) return prev;
+        const originalTopic = prev.chapters
+          .find(c => c.id === chapterId)
+          ?.topics.find(t => t.id === topicId);
+        
+        if (!originalTopic) return prev;
+        
+        return {
+          ...prev,
+          chapters: prev.chapters.map(chapter => 
+            chapter.id === chapterId
+              ? {
+                  ...chapter,
+                  topics: chapter.topics.map(t =>
+                    t.id === topicId ? originalTopic : t
+                  )
+                }
+              : chapter
+          )
+        };
+      });
+
       toast({
         title: "Error",
-        description: "Failed to update topic",
+        description: "Failed to update topic. Please try again.",
         variant: "destructive",
       });
+      throw error;
     }
   }, [toast]);
 
@@ -318,7 +424,7 @@ export default function SubjectPage() {
   useEffect(() => {
     async function fetchSubject() {
       try {
-        const response = await fetch(`/api/subjects/${subjectId}`);
+        const response = await fetch(`/api/subjects/${actualSubjectId}`);
         if (!response.ok) throw new Error('Failed to fetch subject');
         const data = await response.json();
         setSubject(data);
@@ -335,7 +441,7 @@ export default function SubjectPage() {
     }
 
     fetchSubject();
-  }, [subjectId, toast]);
+  }, [actualSubjectId, toast]);
 
   if (isLoading) {
     return <SubjectSkeleton />;
@@ -403,6 +509,7 @@ export default function SubjectPage() {
                   important={chapter.important}
                   onTopicToggle={(topicId, checkboxIndex) => handleTopicToggle(chapter.id, topicId, checkboxIndex)}
                   onEdit={handleChapterEdit}
+                  onDelete={async () => await handleChapterDelete(chapter.id)}
                   onAddTopic={handleAddTopic}
                   onUpdateTopic={handleTopicUpdate}
                   onDeleteTopic={handleTopicDelete}

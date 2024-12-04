@@ -26,12 +26,32 @@ import {
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 
+interface TopicResponse {
+  success: boolean;
+  topic: {
+    id: string;
+    name: string;
+    important: boolean;
+    learningStatus: boolean;
+    revisionCount: number;
+    practiceCount: number;
+    testCount: number;
+    chapterId: string;
+    position: number;
+    lastRevised: string | null;
+    nextRevision: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 interface TopicActionsProps {
   topicId: string;
   topicName: string;
   isImportant: boolean;
-  onUpdate: (topicId: string, data: { name?: string; important?: boolean }) => Promise<any>;
+  onUpdate: (chapterId: string, topicId: string, data: { name?: string; important?: boolean }) => Promise<TopicResponse>;
   onDelete: (topicId: string) => void;
+  chapterId: string;
 }
 
 export function TopicActions({ 
@@ -39,7 +59,8 @@ export function TopicActions({
   topicName, 
   isImportant,
   onUpdate,
-  onDelete 
+  onDelete,
+  chapterId 
 }: TopicActionsProps) {
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -55,13 +76,9 @@ export function TopicActions({
   const handleImportantToggle = async () => {
     try {
       setIsSubmitting(true);
-      await onUpdate(topicId, { important: !isImportant });
-      toast({
-        title: "Success",
-        description: `Topic marked as ${!isImportant ? 'important' : 'not important'}.`,
-        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
-      });
+      await onUpdate(chapterId, topicId, { important: !isImportant });
     } catch (error) {
+      console.error('Error toggling importance:', error);
       toast({
         title: "Error",
         description: "Failed to update topic importance.",
@@ -82,16 +99,10 @@ export function TopicActions({
 
     try {
       setIsSubmitting(true);
-      await onUpdate(topicId, { name: trimmedName });
-      
-      toast({
-        title: "Success",
-        description: "Topic name has been updated.",
-        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
-      });
-      
+      await onUpdate(chapterId, topicId, { name: trimmedName });
       setShowEditDialog(false);
     } catch (error) {
+      console.error('Error updating topic name:', error);
       toast({
         title: "Error",
         description: "Failed to update topic name.",

@@ -1,5 +1,4 @@
-import { Checkbox } from "@/components/ui/checkbox"
-import { Trash2, AlertCircle, Plus, Star, MoreVertical, Pencil, GripVertical, ChevronDown } from "lucide-react"
+import { Trash2, AlertCircle, Plus, MoreVertical, Pencil, GripVertical, ChevronDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { ChapterCategory } from "./chapter-categories"
 import { Badge } from "@/components/ui/badge"
@@ -11,7 +10,6 @@ import { useMemo, memo, useState, useCallback, useEffect } from "react"
 import {
   DndContext,
   DragEndEvent,
-  DragStartEvent,
   useSensor,
   useSensors,
   MouseSensor,
@@ -51,6 +49,25 @@ interface TopicUpdateData {
   position?: number;
 }
 
+type TopicUpdateResponse = {
+  success: boolean;
+  topic: {
+    id: string;
+    name: string;
+    important: boolean;
+    learningStatus: boolean;
+    revisionCount: number;
+    practiceCount: number;
+    testCount: number;
+    chapterId: string;
+    position: number;
+    lastRevised: string | null;
+    nextRevision: string | null;
+    createdAt: string;
+    updatedAt: string;
+  };
+}
+
 interface Topic {
   id: string;
   name: string;
@@ -59,11 +76,12 @@ interface Topic {
   revisionCount: number;
   practiceCount: number;
   testCount: number;
+  chapterId: string;
   position: number;
-  createdAt: Date;
-  updatedAt: Date;
-  lastRevised: Date | null;
-  nextRevision: Date | null;
+  lastRevised: string | null;
+  nextRevision: string | null;
+  createdAt: string;
+  updatedAt: string;
 }
 
 interface ChapterCardProps {
@@ -75,9 +93,9 @@ interface ChapterCardProps {
   important?: boolean;
   onTopicToggle: (topicId: string, checkboxIndex?: number) => void;
   onEdit?: (chapterId: string, updatedChapter: { name: string; important: boolean }) => void;
-  onDelete?: () => void;
+  onDelete?: () => Promise<void>;
   onAddTopic?: (chapterId: string, topic: { id: string; name: string }) => void;
-  onUpdateTopic?: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<any>;
+  onUpdateTopic?: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicUpdateResponse>;
   onDeleteTopic?: (chapterId: string, topicId: string) => void;
   isPending?: (topicId: string) => boolean;
 }
@@ -100,14 +118,16 @@ const SortableTopicItem = memo(({
   onTopicToggle,
   onUpdateTopic,
   onDeleteTopic,
-  isPending
+  isPending,
+  chapterId
 }: {
   topic: Topic;
   category: ChapterCategory;
   onTopicToggle: (topicId: string, checkboxIndex?: number) => void;
-  onUpdateTopic: (topicId: string, data: TopicUpdateData) => Promise<any>;
+  onUpdateTopic: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicUpdateResponse>;
   onDeleteTopic: (topicId: string) => void;
   isPending?: (topicId: string) => boolean;
+  chapterId: string;
 }) => {
   const {
     attributes,
@@ -182,6 +202,7 @@ const SortableTopicItem = memo(({
         isImportant={topic.important}
         onUpdate={onUpdateTopic}
         onDelete={onDeleteTopic}
+        chapterId={chapterId}
       />
     </div>
   );
@@ -204,6 +225,7 @@ export function ChapterCard({
   isPending
 }: ChapterCardProps) {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [localTopics, setLocalTopics] = useState<Topic[]>(topics);
@@ -257,7 +279,37 @@ export function ChapterCard({
 
   // Calculate chapter progress using the universal calculation logic
   const chapterProgress = useMemo(() => {
-    return calculateChapterProgress({ id, name, topics } as any);
+    return calculateChapterProgress({
+      id,
+      name,
+      topics,
+      important: false,
+      learningProgress: 0,
+      revisionProgress: 0,
+      practiceProgress: 0,
+      testProgress: 0,
+      overallProgress: 0,
+      position: 0,
+      subjectId: '',
+      subject: {
+        id: '',
+        name: '',
+        weightage: 0,
+        expectedMarks: 0,
+        foundationLevel: 'Beginner',
+        overallProgress: 0,
+        learningProgress: 0,
+        revisionProgress: 0,
+        practiceProgress: 0,
+        testProgress: 0,
+        position: 0,
+        userId: '',
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
   }, [id, name, topics]);
 
   // Get the progress value for the current category
@@ -278,22 +330,16 @@ export function ChapterCard({
     if (onAddTopic) {
       onAddTopic(id, topic);
     }
-    setIsAddingTopic(false);
   }, [id, onAddTopic]);
 
-  const handleTopicUpdate = useCallback(async (topicId: string, data: TopicUpdateData) => {
-    if (onUpdateTopic) {
-      return onUpdateTopic(id, topicId, data);
+  const handleDeleteChapter = useCallback(async () => {
+    setIsDeleting(true);
+    try {
+      await onDelete?.();
+      setShowDeleteDialog(false);
+    } finally {
+      setIsDeleting(false);
     }
-  }, [id, onUpdateTopic]);
-
-  const handleTopicDelete = useCallback((topicId: string) => {
-    onDeleteTopic?.(id, topicId);
-  }, [id, onDeleteTopic]);
-
-  const handleDeleteChapter = useCallback(() => {
-    onDelete?.();
-    setShowDeleteDialog(false);
   }, [onDelete]);
 
   return (
@@ -421,9 +467,10 @@ export function ChapterCard({
                   topic={topic}
                   category={category}
                   onTopicToggle={onTopicToggle}
-                  onUpdateTopic={handleTopicUpdate}
-                  onDeleteTopic={handleTopicDelete}
+                  onUpdateTopic={onUpdateTopic!}
+                  onDeleteTopic={(topicId) => onDeleteTopic!(id, topicId)}
                   isPending={isPending}
+                  chapterId={id}
                 />
               ))}
             </div>
@@ -445,17 +492,25 @@ export function ChapterCard({
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Chapter</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{name}"? This action cannot be undone.
+              Are you sure you want to delete &rdquo;{name}&rdquo;? This action cannot be undone.
               All topics and progress in this chapter will be permanently deleted.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteChapter}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={isDeleting}
             >
-              Delete Chapter
+              {isDeleting ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                  Deleting...
+                </>
+              ) : (
+                "Delete Chapter"
+              )}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
