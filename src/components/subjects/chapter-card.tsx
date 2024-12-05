@@ -45,6 +45,7 @@ import {
 import { BaseTopic, TopicUpdateData, TopicResponse } from "@/types/prisma/topic"
 import { BaseChapter } from "@/types/prisma/chapter"
 import { convertDates } from "@/lib/utils/dates"
+import { Topic } from "@prisma/client"
 
 interface ChapterCardProps {
   id: string;
@@ -278,7 +279,9 @@ export function ChapterCard({
       updatedAt: new Date()
     };
 
-    const topicsWithDates = topics.map(topic => convertDates(topic, ['lastRevised', 'nextRevision', 'createdAt', 'updatedAt']));
+    const topicsWithDates = topics.map(topic => 
+      convertDates({ ...topic }, ['lastRevised', 'nextRevision', 'createdAt', 'updatedAt']) as Topic
+    );
 
     return calculateChapterProgress({
       ...chapterData,

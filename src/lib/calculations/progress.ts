@@ -1,4 +1,4 @@
-import { Topic } from "@prisma/client"
+import { Topic, Chapter, Subject } from "@prisma/client"
 import { 
   TopicProgress, 
   ChapterProgress, 
@@ -12,7 +12,7 @@ import {
 /**
  * Safely get topics array from a chapter
  */
-function getSafeTopics(chapter: any): Topic[] {
+function getSafeTopics(chapter: Partial<ChapterWithRelations>): Topic[] {
   if (!chapter) return [];
   return Array.isArray(chapter.topics) ? chapter.topics : [];
 }
@@ -20,7 +20,7 @@ function getSafeTopics(chapter: any): Topic[] {
 /**
  * Safely get chapters array from a subject
  */
-function getSafeChapters(subject: any): any[] {
+function getSafeChapters(subject: Partial<SubjectWithRelations>): ChapterWithRelations[] {
   if (!subject) return [];
   return Array.isArray(subject.chapters) ? subject.chapters : [];
 }

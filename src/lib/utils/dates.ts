@@ -17,7 +17,7 @@ export function toISOString(date: Date | string | null): string | null {
 /**
  * Convert an object's date fields from strings to Date objects
  */
-export function convertDates<T extends Record<string, any>>(
+export function convertDates<T extends Record<string, unknown>>(
   obj: T,
   dateFields: (keyof T)[]
 ): T {

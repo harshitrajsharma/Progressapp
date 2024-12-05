@@ -1,5 +1,3 @@
-import type { SubjectWithRelations } from "../calculations/types";
-
 export enum RecommendationType {
   REVISE = 'revise',
   PRIORITY = 'priority',

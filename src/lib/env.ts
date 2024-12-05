@@ -3,14 +3,6 @@ import { z } from 'zod'
 const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url(),
-  DB_HOST: z.string(),
-  DB_USER: z.string(),
-  DB_PASS: z.string(),
-  DB_NAME: z.string(),
-  DB_CONNECTION_LIMIT: z.string().transform(Number),
-  DB_POOL_MIN: z.string().transform(Number),
-  DB_POOL_MAX: z.string().transform(Number),
-  DB_TIMEOUT: z.string().transform(Number),
 
   // Auth
   NEXTAUTH_URL: z.string().url(),
@@ -20,33 +12,27 @@ const envSchema = z.object({
 
   // App
   NODE_ENV: z.enum(['development', 'production', 'test']),
-  APP_URL: z.string().url(),
-  API_TIMEOUT: z.string().transform(Number),
+  VERCEL_ENV: z.enum(['development', 'preview', 'production']).optional(),
 })
 
-// Validate environment variables
-function validateEnv() {
-  try {
-    return envSchema.parse(process.env)
-  } catch (error) {
-    if (error instanceof z.ZodError) {
-      console.error(
-        'Invalid environment variables:',
-        JSON.stringify(error.flatten().fieldErrors, null, 2)
-      )
-    }
-    throw new Error('Invalid environment variables')
-  }
+const processEnv = {
+  DATABASE_URL: process.env.DATABASE_URL,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
+  NODE_ENV: process.env.NODE_ENV,
+  VERCEL_ENV: process.env.VERCEL_ENV,
+} as const
+
+const parsed = envSchema.safeParse(processEnv)
+
+if (!parsed.success) {
+  console.error(
+    '❌ Invalid environment variables:',
+    JSON.stringify(parsed.error.format(), null, 2)
+  )
+  throw new Error('Invalid environment variables')
 }
 
-export const env = validateEnv()
-
-// Type inference
-type Env = z.infer<typeof envSchema>
-
-// eslint-disable-next-line @typescript-eslint/no-namespace
-declare global {
-  namespace NodeJS {
-    interface ProcessEnv extends Env {}
-  }
-} 
+export const env = parsed.data 
