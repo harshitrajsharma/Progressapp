@@ -80,27 +80,34 @@ export function useTopicManagement() {
     category: TopicCategory,
     currentValue: number,
     newValue: number,
-    onSuccess: (data: any) => void
+    onSuccess: (data: any) => void,
+    existingTopic?: Topic
   ) => {
     if (pendingUpdates.has(topicId)) return;
     setPendingUpdates(prev => new Set(prev).add(topicId));
 
-    // Prepare optimistic update data with all required fields
+    // Create optimistic update with all existing values
+    const optimisticTopic = {
+      id: topicId,
+      name: topicName,
+      learningStatus: existingTopic?.learningStatus ?? false,
+      revisionCount: existingTopic?.revisionCount ?? 0,
+      practiceCount: existingTopic?.practiceCount ?? 0,
+      testCount: existingTopic?.testCount ?? 0,
+      ...(category === 'learning' 
+        ? { learningStatus: newValue === 1 }
+        : { [`${category}Count`]: newValue }
+      )
+    };
+
+    // Prepare optimistic update data
     const optimisticData = {
-      topic: {
-        id: topicId,
-        name: topicName,
-        [category === 'learning' ? 'learningStatus' : `${category}Count`]: newValue,
-        learningStatus: category === 'learning' ? newValue === 1 : undefined,
-        revisionCount: category === 'revision' ? newValue : undefined,
-        practiceCount: category === 'practice' ? newValue : undefined,
-        testCount: category === 'test' ? newValue : undefined
-      },
+      topic: optimisticTopic,
       chapterProgress: {
-        learning: 0,
-        revision: 0,
-        practice: 0,
-        test: 0,
+        learning: existingTopic?.learningStatus ? 100 : 0,
+        revision: ((existingTopic?.revisionCount ?? 0) / 3) * 100,
+        practice: ((existingTopic?.practiceCount ?? 0) / 3) * 100,
+        test: ((existingTopic?.testCount ?? 0) / 3) * 100,
         overall: 0
       }
     };
@@ -143,34 +150,27 @@ export function useTopicManagement() {
         });
       }
 
-      // Only update if server data is significantly different
-      const hasSignificantChanges = 
-        data.topic[category === 'learning' ? 'learningStatus' : `${category}Count`] !== 
-        optimisticData.topic[category === 'learning' ? 'learningStatus' : `${category}Count`];
+      // Merge server response with existing data
+      const updatedTopic = {
+        ...optimisticTopic,
+        ...data.topic,
+        [category === 'learning' ? 'learningStatus' : `${category}Count`]: 
+          data.topic[category === 'learning' ? 'learningStatus' : `${category}Count`]
+      };
 
-      if (hasSignificantChanges) {
-        onSuccess(data);
-      }
+      onSuccess({
+        topic: updatedTopic,
+        chapterProgress: data.chapterProgress
+      });
     } catch (error) {
       console.error('Error updating topic status:', error);
-      // Revert UI to previous state
+      // Revert UI to previous state with preserved values
       onSuccess({
         topic: {
-          id: topicId,
-          name: topicName,
-          [category === 'learning' ? 'learningStatus' : `${category}Count`]: currentValue,
-          learningStatus: category === 'learning' ? currentValue === 1 : undefined,
-          revisionCount: category === 'revision' ? currentValue : undefined,
-          practiceCount: category === 'practice' ? currentValue : undefined,
-          testCount: category === 'test' ? currentValue : undefined
+          ...optimisticTopic,
+          [category === 'learning' ? 'learningStatus' : `${category}Count`]: currentValue
         },
-        chapterProgress: {
-          learning: 0,
-          revision: 0,
-          practice: 0,
-          test: 0,
-          overall: 0
-        }
+        chapterProgress: optimisticData.chapterProgress
       });
       toast({
         title: "❌ Error",

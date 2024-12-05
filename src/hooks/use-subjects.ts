@@ -1,7 +1,7 @@
 'use client';
 
 import useSWR from 'swr';
-import { SubjectWithRelations } from '@/lib/calculations/types';
+import type { SubjectWithRelations } from '@/lib/calculations/types';
 
 const fetcher = (url: string) => fetch(url).then(res => res.json());
 

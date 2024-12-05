@@ -1,5 +1,3 @@
-'use client';
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Check, AlertCircle } from "lucide-react";
@@ -13,29 +11,32 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
-import { SubjectWithRelations } from "@/lib/calculations/types";
 import { useToast } from "@/hooks/use-toast";
-import { useSubjects } from "@/hooks/use-subjects";
+import { SubjectWithRelations } from "@/types/prisma/subject";
+import { EditSubjectData } from "@/types/forms";
 
-interface EditSubjectDialogProps {
+type EditSubjectDialogProps = {
   subject: SubjectWithRelations;
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: (updatedSubject: SubjectWithRelations) => void;
 }
 
-export function EditSubjectDialog({ subject, open, onOpenChange }: EditSubjectDialogProps) {
+export function EditSubjectDialog({ 
+  subject, 
+  open, 
+  onOpenChange,
+  onSuccess 
+}: EditSubjectDialogProps) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
-  const { revalidateSubjects } = useSubjects();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
-    const data = {
+    const data: EditSubjectData = {
       name: formData.get('name') as string,
       weightage: Number(formData.get('weightage')),
     };
@@ -55,6 +56,13 @@ export function EditSubjectDialog({ subject, open, onOpenChange }: EditSubjectDi
         throw new Error(result.message || 'Failed to update subject');
       }
 
+      if (onSuccess) {
+        onSuccess({
+          ...subject,
+          ...data
+        });
+      }
+
       toast({
         description: (
           <div className="flex gap-2 items-center">
@@ -67,8 +75,6 @@ export function EditSubjectDialog({ subject, open, onOpenChange }: EditSubjectDi
         duration: 3000,
       });
 
-      // Revalidate data before closing dialog
-      await revalidateSubjects();
       onOpenChange(false);
     } catch (error) {
       console.error('Error updating subject:', error);

@@ -1,4 +1,8 @@
-import { Chapter, Subject, Test, Topic } from "@prisma/client"
+import { Chapter, Subject, Test, Topic, MockTest } from "@prisma/client"
+import type { SubjectWithRelations, FoundationLevel } from "@/types/prisma/subject"
+
+// Re-export the types
+export type { SubjectWithRelations, FoundationLevel }
 
 // Extended types with relations
 export interface TopicWithRelations extends Topic {
@@ -8,11 +12,7 @@ export interface TopicWithRelations extends Topic {
 export interface ChapterWithRelations extends Chapter {
   topics: Topic[]
   subject: Subject
-}
-
-export interface SubjectWithRelations extends Subject {
-  chapters: ChapterWithRelations[]
-  tests: Test[]
+  position: number
 }
 
 // Progress types
@@ -50,9 +50,6 @@ export interface SubjectProgress extends TopicProgress {
     test: ProgressStats
   }
 }
-
-// Foundation Level
-export type FoundationLevel = "Beginner" | "Moderate" | "Advanced"
 
 // Test Statistics
 export interface TestStatistics {

@@ -31,9 +31,9 @@ function getSafeChapters(subject: any): any[] {
 export function calculateTopicProgress(topic: Topic): TopicProgress {
   return {
     learning: topic.learningStatus ? 100 : 0,
-    revision: Math.min(100, (topic.revisionCount / 3) * 100),
-    practice: Math.min(100, (topic.practiceCount / 3) * 100),
-    test: Math.min(100, (topic.testCount / 3) * 100)
+    revision: (topic.revisionCount / 3) * 100,  // Each checkbox contributes 33.33%
+    practice: (topic.practiceCount / 3) * 100,  // Each checkbox contributes 33.33%
+    test: (topic.testCount / 3) * 100          // Each checkbox contributes 33.33%
   }
 }
 
@@ -45,11 +45,11 @@ export function isTopicCompletedForCategory(topic: Topic, category: 'learning' |
     case 'learning':
       return topic.learningStatus;
     case 'revision':
-      return topic.revisionCount >= 3;
+      return topic.revisionCount >= 3;  // All 3 checkboxes must be checked for completion
     case 'practice':
-      return topic.practiceCount >= 3;
+      return topic.practiceCount >= 3;  // All 3 checkboxes must be checked for completion
     case 'test':
-      return topic.testCount >= 3;
+      return topic.testCount >= 3;      // All 3 checkboxes must be checked for completion
     default:
       return false;
   }
@@ -73,12 +73,44 @@ export function calculateProgressStats(
   category: 'learning' | 'revision' | 'practice' | 'test'
 ): ProgressStats {
   const totalTopics = topics.length;
-  const completedTopics = topics.filter(topic => isTopicCompletedForCategory(topic, category)).length;
+  if (totalTopics === 0) {
+    return { totalTopics: 0, completedTopics: 0, percentage: 0 };
+  }
+
+  let completedTopics = 0;
+  let totalProgress = 0;
+
+  topics.forEach(topic => {
+    if (!topic) return; // Skip invalid topics
+
+    let progress = 0;
+    switch (category) {
+      case 'learning':
+        progress = topic.learningStatus ? 1 : 0;
+        break;
+      case 'revision':
+        progress = Math.min(topic.revisionCount, 3) / 3;
+        break;
+      case 'practice':
+        progress = Math.min(topic.practiceCount, 3) / 3;
+        break;
+      case 'test':
+        progress = Math.min(topic.testCount, 3) / 3;
+        break;
+    }
+
+    totalProgress += progress;
+    if (isTopicCompletedForCategory(topic, category)) {
+      completedTopics++;
+    }
+  });
+
+  const percentage = Math.min(100, (totalProgress / totalTopics) * 100);
 
   return {
     totalTopics,
     completedTopics,
-    percentage: totalTopics > 0 ? (completedTopics / totalTopics) * 100 : 0
+    percentage: Math.round(percentage * 10) / 10 // Round to 1 decimal place
   };
 }
 
@@ -259,5 +291,5 @@ export function calculateSubjectProgress(subject: SubjectWithRelations): Subject
     foundationLevel,
     expectedMarks,
     stats
-  }
+  };
 } 

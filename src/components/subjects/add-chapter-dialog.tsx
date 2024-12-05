@@ -17,10 +17,11 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { useToast } from "@/hooks/use-toast"
 import { Plus } from "lucide-react"
+import { ChapterWithRelations } from "@/types/prisma/chapter";
 
 interface AddChapterDialogProps {
   subjectId: string;
-  onSuccess?: (newChapter: any) => void;
+  onSuccess?: (newChapter: ChapterWithRelations) => void;
 }
 
 export function AddChapterDialog({ subjectId, onSuccess }: AddChapterDialogProps) {

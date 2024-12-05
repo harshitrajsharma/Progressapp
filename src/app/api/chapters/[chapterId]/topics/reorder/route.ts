@@ -6,7 +6,11 @@ import { prisma } from "@/lib/db"
 
 const reorderTopicSchema = z.object({
   topicId: z.string(),
-  newIndex: z.number().int().min(0),
+  newPosition: z.number().int().min(0),
+  positions: z.array(z.object({
+    id: z.string(),
+    position: z.number().int().min(0)
+  }))
 })
 
 export async function PUT(
@@ -43,63 +47,15 @@ export async function PUT(
       return new NextResponse("Chapter not found", { status: 404 })
     }
 
-    // Find the topic to move
-    const topicToMove = chapter.topics.find(t => t.id === body.topicId)
-    if (!topicToMove) {
-      return new NextResponse("Topic not found", { status: 404 })
-    }
-
-    const oldPosition = topicToMove.position
-    const newPosition = body.newIndex
-
-    // Update positions in database
-    if (oldPosition !== newPosition) {
-      if (oldPosition < newPosition) {
-        // Moving down: Decrement positions of topics between old and new position
-        await prisma.$transaction([
-          prisma.topic.updateMany({
-            where: {
-              chapterId: params.chapterId,
-              position: {
-                gt: oldPosition,
-                lte: newPosition
-              }
-            },
-            data: {
-              position: {
-                decrement: 1
-              }
-            }
-          }),
-          prisma.topic.update({
-            where: { id: body.topicId },
-            data: { position: newPosition }
-          })
-        ])
-      } else {
-        // Moving up: Increment positions of topics between new and old position
-        await prisma.$transaction([
-          prisma.topic.updateMany({
-            where: {
-              chapterId: params.chapterId,
-              position: {
-                gte: newPosition,
-                lt: oldPosition
-              }
-            },
-            data: {
-              position: {
-                increment: 1
-              }
-            }
-          }),
-          prisma.topic.update({
-            where: { id: body.topicId },
-            data: { position: newPosition }
-          })
-        ])
-      }
-    }
+    // Update all topic positions in a single transaction
+    await prisma.$transaction(
+      body.positions.map(({ id, position }) =>
+        prisma.topic.update({
+          where: { id },
+          data: { position }
+        })
+      )
+    );
 
     // Return the updated topics list
     const updatedTopics = await prisma.topic.findMany({

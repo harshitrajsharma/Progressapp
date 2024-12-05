@@ -1,9 +1,9 @@
 import { Trash2, AlertCircle, Plus, MoreVertical, Pencil, GripVertical, ChevronDown, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { ChapterCategory } from "./chapter-categories"
+import { ChapterCategory } from "@/types/prisma/category"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
-import { EditChapterDialog } from "./edit-chapter-dialog"
+import { EditChapterDialogWrapper } from "./edit-chapter-dialog-wrapper"
 import { AddTopicInput } from "./add-topic-input"
 import { calculateChapterProgress } from "@/lib/calculations"
 import { useMemo, memo, useState, useCallback, useEffect } from "react"
@@ -42,52 +42,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-
-interface TopicUpdateData {
-  name?: string;
-  important?: boolean;
-  position?: number;
-}
-
-type TopicUpdateResponse = {
-  success: boolean;
-  topic: {
-    id: string;
-    name: string;
-    important: boolean;
-    learningStatus: boolean;
-    revisionCount: number;
-    practiceCount: number;
-    testCount: number;
-    chapterId: string;
-    position: number;
-    lastRevised: string | null;
-    nextRevision: string | null;
-    createdAt: string;
-    updatedAt: string;
-  };
-}
-
-interface Topic {
-  id: string;
-  name: string;
-  important: boolean;
-  learningStatus: boolean;
-  revisionCount: number;
-  practiceCount: number;
-  testCount: number;
-  chapterId: string;
-  position: number;
-  lastRevised: string | null;
-  nextRevision: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { BaseTopic, TopicUpdateData, TopicResponse } from "@/types/prisma/topic"
+import { BaseChapter } from "@/types/prisma/chapter"
+import { convertDates } from "@/lib/utils/dates"
 
 interface ChapterCardProps {
   id: string;
   name: string;
-  topics: Topic[];
+  topics: BaseTopic[];
   progress: number;
   category: ChapterCategory;
   important?: boolean;
@@ -95,7 +57,7 @@ interface ChapterCardProps {
   onEdit?: (chapterId: string, updatedChapter: { name: string; important: boolean }) => void;
   onDelete?: () => Promise<void>;
   onAddTopic?: (chapterId: string, topic: { id: string; name: string }) => void;
-  onUpdateTopic?: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicUpdateResponse>;
+  onUpdateTopic?: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicResponse>;
   onDeleteTopic?: (chapterId: string, topicId: string) => void;
   isPending?: (topicId: string) => boolean;
 }
@@ -121,10 +83,10 @@ const SortableTopicItem = memo(({
   isPending,
   chapterId
 }: {
-  topic: Topic;
+  topic: BaseTopic;
   category: ChapterCategory;
   onTopicToggle: (topicId: string, checkboxIndex?: number) => void;
-  onUpdateTopic: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicUpdateResponse>;
+  onUpdateTopic: (chapterId: string, topicId: string, data: TopicUpdateData) => Promise<TopicResponse>;
   onDeleteTopic: (topicId: string) => void;
   isPending?: (topicId: string) => boolean;
   chapterId: string;
@@ -210,6 +172,24 @@ const SortableTopicItem = memo(({
 
 SortableTopicItem.displayName = 'SortableTopicItem';
 
+// Add mock subject for type satisfaction
+const mockSubject = {
+  id: '',
+  name: '',
+  weightage: 0,
+  expectedMarks: 0,
+  foundationLevel: 'Beginner' as const,
+  overallProgress: 0,
+  learningProgress: 0,
+  revisionProgress: 0,
+  practiceProgress: 0,
+  testProgress: 0,
+  position: 0,
+  userId: '',
+  createdAt: new Date(),
+  updatedAt: new Date()
+};
+
 export function ChapterCard({ 
   id,
   name, 
@@ -228,7 +208,7 @@ export function ChapterCard({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isAddingTopic, setIsAddingTopic] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
-  const [localTopics, setLocalTopics] = useState<Topic[]>(topics);
+  const [localTopics, setLocalTopics] = useState<BaseTopic[]>(topics);
   const { handleReorder } = useTopicReorder(id);
   const { isCollapsed, toggleCollapse } = useChapterCollapse(id);
 
@@ -259,18 +239,22 @@ export function ChapterCard({
     const newIndex = localTopics.findIndex((t) => t.id === over.id);
 
     if (oldIndex !== -1 && newIndex !== -1) {
+      // Calculate new topics order
+      const newTopics = arrayMove(localTopics, oldIndex, newIndex);
+      const updatedTopics = newTopics.map((topic, index) => ({
+        ...topic,
+        position: index
+      }));
+
       // Optimistically update the local state
-      setLocalTopics(prevTopics => {
-        const newTopics = arrayMove(prevTopics, oldIndex, newIndex);
-        return newTopics.map((topic: Topic, index: number) => ({
-          ...topic,
-          position: index
-        }));
-      });
+      setLocalTopics(updatedTopics);
 
       // Call the API and update parent state
-      const updatedTopics = await handleReorder(oldIndex, newIndex, localTopics);
-      if (!updatedTopics) {
+      const serverTopics = await handleReorder(oldIndex, newIndex, localTopics);
+      if (serverTopics) {
+        // Update with server response
+        setLocalTopics(serverTopics);
+      } else {
         // Revert to original state if the API call failed
         setLocalTopics(topics);
       }
@@ -279,10 +263,9 @@ export function ChapterCard({
 
   // Calculate chapter progress using the universal calculation logic
   const chapterProgress = useMemo(() => {
-    return calculateChapterProgress({
+    const chapterData: BaseChapter = {
       id,
       name,
-      topics,
       important: false,
       learningProgress: 0,
       revisionProgress: 0,
@@ -291,30 +274,24 @@ export function ChapterCard({
       overallProgress: 0,
       position: 0,
       subjectId: '',
-      subject: {
-        id: '',
-        name: '',
-        weightage: 0,
-        expectedMarks: 0,
-        foundationLevel: 'Beginner',
-        overallProgress: 0,
-        learningProgress: 0,
-        revisionProgress: 0,
-        practiceProgress: 0,
-        testProgress: 0,
-        position: 0,
-        userId: '',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      },
       createdAt: new Date(),
       updatedAt: new Date()
+    };
+
+    const topicsWithDates = topics.map(topic => convertDates(topic, ['lastRevised', 'nextRevision', 'createdAt', 'updatedAt']));
+
+    return calculateChapterProgress({
+      ...chapterData,
+      topics: topicsWithDates,
+      subject: mockSubject
     });
   }, [id, name, topics]);
 
   // Get the progress value for the current category
   const categoryProgress = useMemo(() => {
-    return Math.round(chapterProgress[category]);
+    const progress = Math.round(chapterProgress[category]);
+    // Handle NaN or undefined cases
+    return Number.isFinite(progress) ? progress : 0;
   }, [chapterProgress, category]);
 
   const handleEdit = useCallback((updatedChapter: { id: string; name: string; important: boolean }) => {
@@ -478,7 +455,7 @@ export function ChapterCard({
         </DndContext>
       )}
 
-      <EditChapterDialog
+      <EditChapterDialogWrapper
         chapterId={id}
         initialName={name}
         initialImportant={important}

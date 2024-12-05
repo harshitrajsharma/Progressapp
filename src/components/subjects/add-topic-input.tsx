@@ -1,15 +1,14 @@
-'use client';
-
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Plus, X, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { BaseTopic } from "@/types/prisma/topic";
 
-interface AddTopicInputProps {
+type AddTopicInputProps = {
   chapterId: string;
-  onAddTopic: (topic: { id: string; name: string }) => void;
+  onAddTopic: (topic: Pick<BaseTopic, 'id' | 'name'>) => void;
   onClose: () => void;
 }
 

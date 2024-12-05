@@ -1,18 +1,20 @@
 'use client';
 
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 import { Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { AddSubjectButton } from "@/components/subjects/add-subject-button";
 import { SubjectCard } from "@/components/subjects/subject-card";
 import { SubjectCardSkeleton } from "@/components/subjects/subject-card-skeleton";
 import { SearchSubjects } from "@/components/subjects/search-subjects";
-import { SubjectWithRelations } from "@/lib/calculations/types";
+import { SubjectWithRelations } from "@/types/prisma/subject";
 import { calculateSubjectProgress } from "@/lib/calculations";
 import { useSubjects } from "@/hooks/use-subjects";
 import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSubjectReorder } from '@/hooks/use-subject-reorder'
 import { useState, useMemo } from 'react'
+
+type SubjectCategory = 'not-started' | 'in-progress' | 'completed';
 
 interface CategorizedSubjects {
   notStarted: SubjectWithRelations[];
@@ -28,6 +30,11 @@ function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
   const { subjects, error, isLoading } = useSubjects();
   const { handleReorder } = useSubjectReorder();
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [categorizedSubjects, setCategorizedSubjects] = useState<CategorizedSubjects>({
+    notStarted: [],
+    inProgress: [],
+    completed: []
+  });
 
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -75,6 +82,32 @@ function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
     );
   }, [subjects, searchQuery]);
 
+  // Update categorized subjects when filtered subjects change
+  useEffect(() => {
+    if (!filteredSubjects) return;
+    
+    const categorized = filteredSubjects.reduce((acc, subject) => {
+      const progress = calculateSubjectProgress(subject);
+      const learningProgress = progress.learning;
+
+      if (learningProgress === 0) {
+        acc.notStarted.push(subject);
+      } else if (learningProgress === 100) {
+        acc.completed.push(subject);
+      } else {
+        acc.inProgress.push(subject);
+      }
+
+      return acc;
+    }, {
+      notStarted: [] as SubjectWithRelations[],
+      inProgress: [] as SubjectWithRelations[],
+      completed: [] as SubjectWithRelations[]
+    });
+
+    setCategorizedSubjects(categorized);
+  }, [filteredSubjects]);
+
   if (error) {
     return (
       <div className="flex items-center justify-center p-6 text-destructive gap-2">
@@ -103,24 +136,6 @@ function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
       </div>
     );
   }
-
-  const categorizedSubjects = filteredSubjects.reduce<CategorizedSubjects>(
-    (acc: CategorizedSubjects, subject: SubjectWithRelations) => {
-      const progress = calculateSubjectProgress(subject);
-      const learningProgress = progress.learning;
-
-      if (learningProgress === 0) {
-        acc.notStarted.push(subject);
-      } else if (learningProgress === 100) {
-        acc.completed.push(subject);
-      } else {
-        acc.inProgress.push(subject);
-      }
-
-      return acc;
-    },
-    { notStarted: [], inProgress: [], completed: [] }
-  );
 
   const activeSubject = subjects.find(s => s.id === activeId);
 
@@ -203,7 +218,7 @@ function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
   );
 }
 
-function getSubjectCategory(subject: SubjectWithRelations): 'in-progress' | 'not-started' | 'completed' {
+function getSubjectCategory(subject: SubjectWithRelations): SubjectCategory {
   const progress = calculateSubjectProgress(subject);
   const learningProgress = progress.learning;
 
@@ -215,6 +230,15 @@ function getSubjectCategory(subject: SubjectWithRelations): 'in-progress' | 'not
 export default function SubjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
+  useEffect(() => {
+    const handleSearch = (e: CustomEvent<string>) => {
+      setSearchQuery(e.detail);
+    };
+
+    window.addEventListener('subjectSearch', handleSearch as EventListener);
+    return () => window.removeEventListener('subjectSearch', handleSearch as EventListener);
+  }, []);
+
   return (
     <div className="h-full flex-1 flex-col space-y-6 sm:space-y-8 p-2 sm:p-4 flex">
       <div className="space-y-1">
@@ -225,7 +249,7 @@ export default function SubjectsPage() {
       </div>
 
       <div className="flex items-center gap-2 sm:gap-4 w-full">
-        <SearchSubjects onSearch={setSearchQuery} />
+        <SearchSubjects />
         <div className="scale-90 sm:scale-100">
           <AddSubjectButton />
         </div>

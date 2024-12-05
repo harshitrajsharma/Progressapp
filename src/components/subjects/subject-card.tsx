@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { calculateSubjectProgress } from "@/lib/calculations";
-import { SubjectWithRelations } from "@/lib/calculations/types";
+import type { SubjectWithRelations } from "@/lib/calculations/types";
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2, Check, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,11 @@ import { useSubjects } from "@/hooks/use-subjects";
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+type SubjectCategory = 'not-started' | 'in-progress' | 'completed';
+
 interface SubjectCardProps {
   subject: SubjectWithRelations;
-  category?: 'not-started' | 'in-progress' | 'completed';
+  category?: SubjectCategory;
 }
 
 function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCardProps) {
@@ -51,7 +53,16 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     0
   );
 
+  // Use centralized calculation logic
   const progress = calculateSubjectProgress(subject);
+  const learningProgress = Math.round(progress.learning);
+  const revisionProgress = Math.round(progress.revision);
+  const practiceProgress = Math.round(progress.practice);
+  const testProgress = Math.round(progress.test);
+  const overallProgress = Math.round(progress.overall);
+  
+ 
+  const foundationLevel = progress.foundationLevel;
 
   const handleEdit = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -112,17 +123,22 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     }
   }, [subject.id, toast, revalidateSubjects]);
 
+  const handleEditSuccess = useCallback(() => {
+    setEditDialogOpen(false);
+    revalidateSubjects();
+  }, [revalidateSubjects]);
+
   const categoryColors = {
     'not-started': 'bg-red-500/10 text-red-500',
     'in-progress': 'bg-blue-500/10 text-blue-500',
     'completed': 'bg-green-500/10 text-green-500'
-  };
+  } as const;
 
   const categoryBg = {
     'not-started': 'hover:bg-red-500/5 bg-red-500/[0.03]',
     'in-progress': 'hover:bg-blue-500/5 bg-blue-500/[0.03]',
     'completed': 'hover:bg-green-500/5 bg-green-500/[0.03]'
-  };
+  } as const;
 
   return (
     <div 
@@ -139,7 +155,6 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
       <Link 
         href={`/subjects/${subject.id}`}
         onClick={(e) => {
-          // Prevent navigation if we're dragging
           if (isDragging) {
             e.preventDefault()
             e.stopPropagation()
@@ -185,7 +200,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                     categoryColors[category]
                   )}
                 >
-                  {Math.round(progress.learning)}%
+                  {learningProgress}%
                 </Badge>
               </div>
               
@@ -204,13 +219,13 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
 
             {/* Stats */}
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {/* Expected Score */}
+              {/* Subject Weightage */}
               <div className="relative bg-background dark:bg-background rounded-lg sm:rounded-xl overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-red-500" />
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-green-300" />
                 <div className="p-2 sm:p-2.5">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">Expected</p>
-                  <p className="text-base sm:text-lg font-semibold text-red-500 mt-0.5">
-                    {Math.round(progress.expectedMarks)}/{subject.weightage}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">subject weightage </p>
+                  <p className="text-base sm:text-lg font-semibold text-green-300 mt-0.5">
+                    {subject.weightage} Marks
                   </p>
                 </div>
               </div>
@@ -221,7 +236,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                 <div className="p-2 sm:p-2.5">
                   <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">Foundation</p>
                   <p className="text-base sm:text-lg font-semibold text-orange-500 mt-0.5">
-                    {subject.foundationLevel}
+                    {foundationLevel}
                   </p>
                 </div>
               </div>
@@ -233,10 +248,10 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
               <div className="space-y-1 sm:space-y-1.5">
                 <div className="flex justify-between items-center text-xs sm:text-sm">
                   <span className="text-muted-foreground">Overall Progress</span>
-                  <span className="font-medium">{Math.round(progress.overall)}%</span>
+                  <span className="font-medium">{overallProgress}%</span>
                 </div>
                 <Progress 
-                  value={progress.overall} 
+                  value={overallProgress} 
                   className="h-1.5 sm:h-2 bg-secondary/50 dark:bg-secondary/25" 
                   indicatorClassName="bg-primary"
                 />
@@ -247,10 +262,10 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                 <div className="space-y-0.5 sm:space-y-1">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>Learning</span>
-                    <span>{Math.round(progress.learning)}%</span>
+                    <span>{learningProgress}%</span>
                   </div>
                   <Progress 
-                    value={progress.learning} 
+                    value={learningProgress} 
                     className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
                     indicatorClassName="bg-blue-500"
                   />
@@ -258,31 +273,34 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                 <div className="space-y-0.5 sm:space-y-1">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>Revision</span>
-                    <span>{Math.round(progress.revision)}%</span>
+                    <span>{revisionProgress}%</span>
                   </div>
                   <Progress 
-                    value={progress.revision} 
+                    value={revisionProgress} 
                     className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
+                    indicatorClassName="bg-green-500"
                   />
                 </div>
                 <div className="space-y-0.5 sm:space-y-1">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>Practice</span>
-                    <span>{Math.round(progress.practice)}%</span>
+                    <span>{practiceProgress}%</span>
                   </div>
                   <Progress 
-                    value={progress.practice} 
+                    value={practiceProgress} 
                     className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
+                    indicatorClassName="bg-yellow-500"
                   />
                 </div>
                 <div className="space-y-0.5 sm:space-y-1">
                   <div className="flex justify-between text-[10px] text-muted-foreground">
                     <span>Test</span>
-                    <span>{Math.round(progress.test)}%</span>
+                    <span>{testProgress}%</span>
                   </div>
                   <Progress 
-                    value={progress.test} 
+                    value={testProgress} 
                     className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
+                    indicatorClassName="bg-purple-500"
                   />
                 </div>
               </div>
@@ -296,6 +314,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
         subject={subject}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
+        onSuccess={handleEditSuccess}
       />
 
       {/* Delete Confirmation Dialog */}

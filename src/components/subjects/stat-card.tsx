@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card"
-import { Info, LucideIcon } from "lucide-react"
+import { Info } from "lucide-react"
 import {
   Tooltip,
   TooltipContent,
@@ -8,19 +8,7 @@ import {
 } from "@/components/ui/tooltip"
 import { cn } from "@/lib/utils"
 import { memo } from "react"
-
-interface StatCardProps {
-  label: string;
-  value: string | number;
-  subValue?: string;
-  icon?: LucideIcon;
-  iconColor?: string;
-  tooltipText?: string;
-  valueColor?: string;
-  className?: string;
-  variant?: 'default' | 'outline';
-  transitionDuration?: number;
-}
+import { StatCardProps } from "@/types/ui"
 
 function StatCardComponent({ 
   label, 
@@ -73,4 +61,6 @@ function StatCardComponent({
   );
 }
 
+// Memoize with display name
+StatCardComponent.displayName = 'StatCardComponent';
 export const StatCard = memo(StatCardComponent); 

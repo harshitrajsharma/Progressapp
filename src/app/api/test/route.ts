@@ -111,6 +111,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json(tests)
   } catch (error) {
+    console.error("[TEST_GET]", error)
     return new NextResponse("Internal Error", { status: 500 })
   }
 } 

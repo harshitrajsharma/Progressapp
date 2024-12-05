@@ -8,31 +8,19 @@ import { SubjectStats } from "@/components/subjects/subject-stats";
 import { ChapterCard } from "@/components/subjects/chapter-card";
 import { EmptyChapters } from "@/components/subjects/empty-chapters";
 import { AddChapterDialog } from "@/components/subjects/add-chapter-dialog";
-import { ChapterCategories, ChapterCategory } from "@/components/subjects/chapter-categories";
+import { ChapterCategories } from "@/components/subjects/chapter-categories";
+import { TestsData } from "@/components/subjects/tests-data";
 import { useToast } from "@/hooks/use-toast";
 import { useTopicManagement } from "@/hooks/use-topic-management";
 import { calculateSubjectProgress } from "@/lib/calculations";
-import { SubjectWithRelations, SubjectProgress } from "@/lib/calculations/types";
+import { SubjectWithRelations, SubjectProgress, ChapterWithRelations } from "@/lib/calculations/types";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ChapterCategory } from "@/types/prisma/category";
+import { EditSubjectDialog } from "@/components/subjects/edit-subject-dialog";
+import { BaseTest } from "@/types/prisma/test";
 
-// Increase cache duration to 30 seconds for better performance
-const CACHE_DURATION = 30000;
+
 const progressCache = new Map<string, { progress: SubjectProgress; timestamp: number }>();
-
-interface ChapterWithRelations {
-  id: string;
-  name: string;
-  important: boolean;
-  learningProgress: number;
-  revisionProgress: number;
-  practiceProgress: number;
-  testProgress: number;
-  overallProgress: number;
-  topics: Topic[];
-  position: number;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 interface TopicUpdateData {
   name?: string;
@@ -81,6 +69,21 @@ const SubjectSkeleton = () => (
 // Memoized chapter card component
 const MemoizedChapterCard = memo(ChapterCard);
 
+function CategoryWrapper({ 
+  selectedCategory, 
+  onCategoryChange 
+}: { 
+  selectedCategory: ChapterCategory; 
+  onCategoryChange: (category: ChapterCategory) => void; 
+}) {
+  return (
+    <ChapterCategories
+      selectedCategory={selectedCategory}
+      onCategoryChange={onCategoryChange}
+    />
+  );
+}
+
 export default function SubjectPage() {
   const { subjectId } = useParams();
   const actualSubjectId = Array.isArray(subjectId) ? subjectId[0] : subjectId;
@@ -89,19 +92,18 @@ export default function SubjectPage() {
   const [selectedCategory, setSelectedCategory] = useState<ChapterCategory>('learning');
   const { toast } = useToast();
   const { updateTopicStatus, isPending } = useTopicManagement();
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  const [tests, setTests] = useState<BaseTest[]>([]);
 
   // Memoize progress calculation with increased cache duration
   const progress = useMemo(() => {
     if (!subject || !actualSubjectId) return null;
 
-    const cached = progressCache.get(actualSubjectId);
-    const now = Date.now();
-
-    if (cached && (now - cached.timestamp) < CACHE_DURATION) {
-      return cached.progress;
-    }
-
+    // Calculate new progress immediately
     const newProgress = calculateSubjectProgress(subject);
+
+    // Update cache
+    const now = Date.now();
     progressCache.set(actualSubjectId, {
       progress: newProgress,
       timestamp: now
@@ -116,7 +118,7 @@ export default function SubjectPage() {
     return subject.chapters;
   }, [subject?.chapters]);
 
-  // Optimized topic toggle handler
+  // Optimized topic toggle handler with progress update
   const handleTopicToggle = useCallback(async (chapterId: string, topicId: string, checkboxIndex?: number) => {
     if (!subject) return;
 
@@ -124,62 +126,59 @@ export default function SubjectPage() {
     const topic = chapter?.topics.find(t => t.id === topicId);
     if (!topic) return;
 
-    // Optimistic update
-    setSubject(prev => {
-      if (!prev) return prev;
-      return {
-        ...prev,
-        chapters: prev.chapters.map(chapter => 
-          chapter.id === chapterId
-            ? {
-                ...chapter,
-                topics: chapter.topics.map(t =>
-                  t.id === topicId
-                    ? {
-                        ...t,
-                        [selectedCategory === 'learning' ? 'learningStatus' : `${selectedCategory}Count`]:
-                          selectedCategory === 'learning'
-                            ? !t.learningStatus
-                            : checkboxIndex !== undefined
-                            ? checkboxIndex + 1
-                            : t[`${selectedCategory}Count`] + 1
-                      }
-                    : t
-                )
-              }
-            : chapter
-        )
-      };
-    });
+    // Calculate current and new values
+    const currentValue = selectedCategory === 'learning' 
+      ? (topic.learningStatus ? 1 : 0) 
+      : topic[`${selectedCategory}Count`];
+    
+    const newValue = selectedCategory === 'learning'
+      ? (topic.learningStatus ? 0 : 1)
+      : checkboxIndex !== undefined 
+        ? checkboxIndex + 1 
+        : Math.min(3, topic[`${selectedCategory}Count`] + 1);
 
-    // API update
+    // Update topic status with existing topic data
     updateTopicStatus(
       topicId,
       topic.name,
       selectedCategory,
-      selectedCategory === 'learning' ? (topic.learningStatus ? 1 : 0) : topic[`${selectedCategory}Count`],
-      selectedCategory === 'learning' ? (topic.learningStatus ? 0 : 1) : checkboxIndex !== undefined ? checkboxIndex + 1 : topic[`${selectedCategory}Count`] + 1,
+      currentValue,
+      newValue,
       (data) => {
-        // Only update if server data is different from optimistic update
-        if (JSON.stringify(data.topic) !== JSON.stringify(topic)) {
-          setSubject(prev => {
-            if (!prev) return prev;
-            return {
-              ...prev,
-              chapters: prev.chapters.map(chapter => 
-                chapter.id === chapterId
-                  ? {
-                      ...chapter,
-                      topics: chapter.topics.map(t =>
-                        t.id === topicId ? data.topic : t
-                      )
-                    }
-                  : chapter
-              )
-            };
-          });
-        }
-      }
+        setSubject(prev => {
+          if (!prev) return prev;
+          
+          const updatedSubject = {
+            ...prev,
+            chapters: prev.chapters.map(chapter => 
+              chapter.id === chapterId
+                ? {
+                    ...chapter,
+                    topics: chapter.topics.map(t =>
+                      t.id === topicId 
+                        ? {
+                            ...t,
+                            ...data.topic,
+                            // Ensure all values are preserved
+                            learningStatus: data.topic.learningStatus ?? t.learningStatus,
+                            revisionCount: data.topic.revisionCount ?? t.revisionCount,
+                            practiceCount: data.topic.practiceCount ?? t.practiceCount,
+                            testCount: data.topic.testCount ?? t.testCount
+                          }
+                        : t
+                    )
+                  }
+                : chapter
+            )
+          };
+          
+          // Clear progress cache to force recalculation
+          progressCache.clear();
+          
+          return updatedSubject;
+        });
+      },
+      topic // Pass existing topic data
     );
   }, [subject, selectedCategory, updateTopicStatus]);
 
@@ -278,7 +277,7 @@ export default function SubjectPage() {
       return {
         ...prev,
         chapters: [...prev.chapters, newChapter]
-      };
+      } as SubjectWithRelations;
     });
 
     toast({
@@ -420,19 +419,137 @@ export default function SubjectPage() {
     }
   }, [toast]);
 
-  // Fetch subject data
+  const handleEditSubject = useCallback((updatedSubject: SubjectWithRelations) => {
+    setSubject(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        ...updatedSubject,
+        // Preserve existing relations
+        chapters: prev.chapters,
+        tests: prev.tests,
+        mockTests: prev.mockTests
+      };
+    });
+  }, []);
+
+  // Add test handler
+  const handleAddTest = useCallback(async (testData: Omit<BaseTest, "id" | "createdAt" | "updatedAt">) => {
+    try {
+      const response = await fetch('/api/test', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(testData),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to add test');
+      }
+
+      const newTest = await response.json();
+      
+      // Update both tests and subject data
+      setTests(prev => [newTest, ...prev]);
+      setSubject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          tests: [newTest, ...(prev.tests || [])],
+          expectedMarks: Math.round((prev.weightage * newTest.score) / 100),
+          testProgress: Math.min(newTest.score, 100)
+        };
+      });
+
+      toast({
+        title: "Success",
+        description: "Test added successfully",
+        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+      });
+    } catch (error) {
+      console.error('Error adding test:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add test. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Delete test handler
+  const handleDeleteTest = useCallback(async (testId: string) => {
+    try {
+      const response = await fetch(`/api/test/${testId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete test');
+      }
+
+      // Update tests state
+      setTests(prev => {
+        const newTests = prev.filter(test => test.id !== testId);
+        return newTests;
+      });
+
+      // Update subject state with new expected marks
+      setSubject(prev => {
+        if (!prev) return prev;
+        const remainingTests = prev.tests.filter(test => test.id !== testId);
+        const averageScore = remainingTests.length > 0
+          ? remainingTests.reduce((acc, test) => acc + test.score, 0) / remainingTests.length
+          : 0;
+
+        return {
+          ...prev,
+          tests: remainingTests,
+          expectedMarks: Math.round((prev.weightage * averageScore) / 100),
+          testProgress: Math.min(averageScore, 100)
+        };
+      });
+
+      toast({
+        title: "Success",
+        description: "Test deleted successfully",
+        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+      });
+    } catch (error) {
+      console.error('Error deleting test:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete test. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [toast]);
+
+  // Update useEffect to fetch tests along with subject data
   useEffect(() => {
-    async function fetchSubject() {
+    async function fetchData() {
       try {
-        const response = await fetch(`/api/subjects/${actualSubjectId}`);
-        if (!response.ok) throw new Error('Failed to fetch subject');
-        const data = await response.json();
-        setSubject(data);
+        const [subjectResponse, testsResponse] = await Promise.all([
+          fetch(`/api/subjects/${actualSubjectId}`),
+          fetch(`/api/test?subjectId=${actualSubjectId}`)
+        ]);
+
+        if (!subjectResponse.ok || !testsResponse.ok) {
+          throw new Error('Failed to fetch data');
+        }
+
+        const [subjectData, testsData] = await Promise.all([
+          subjectResponse.json(),
+          testsResponse.json()
+        ]);
+
+        setSubject(subjectData);
+        setTests(testsData);
       } catch (error) {
-        console.error('Error fetching subject:', error);
+        console.error('Error fetching data:', error);
         toast({
           title: "Error",
-          description: "Failed to load subject data. Please try again.",
+          description: "Failed to load data. Please try again.",
           variant: "destructive",
         });
       } finally {
@@ -440,7 +557,7 @@ export default function SubjectPage() {
       }
     }
 
-    fetchSubject();
+    fetchData();
   }, [actualSubjectId, toast]);
 
   if (isLoading) {
@@ -472,10 +589,9 @@ export default function SubjectPage() {
         </div>
       </div>
 
-      <ChapterCategories
+      <CategoryWrapper
         selectedCategory={selectedCategory}
         onCategoryChange={setSelectedCategory}
-        variant="default"
       />
 
       <div className="space-y-4">
@@ -520,6 +636,23 @@ export default function SubjectPage() {
           )}
         </div>
       </div>
+
+      <Suspense fallback={<Skeleton className="h-96" />}>
+        <TestsData
+          subjectId={subject.id}
+          weightage={subject.weightage}
+          tests={tests}
+          onAddTest={handleAddTest}
+          onDeleteTest={handleDeleteTest}
+        />
+      </Suspense>
+
+      <EditSubjectDialog
+        subject={subject}
+        open={showEditDialog}
+        onOpenChange={setShowEditDialog}
+        onSuccess={handleEditSubject}
+      />
     </div>
   );
 } 

@@ -14,14 +14,12 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useSubjects } from "@/hooks/use-subjects";
 
 export function AddSubjectButton() {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
   const { revalidateSubjects } = useSubjects();
 

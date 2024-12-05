@@ -1,39 +1,40 @@
 import { memo, useCallback } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ChapterCategory } from "./chapter-categories";
-
-interface Topic {
-  id: string;
-  name: string;
-  important: boolean;
-  learningStatus: boolean;
-  revisionCount: number;
-  practiceCount: number;
-  testCount: number;
-}
+import { ChapterCategory } from "@/types/prisma/category";
+import { BaseTopic } from "@/types/prisma/topic";
+import { isTopicCompletedForCategory } from "@/lib/calculations/progress";
 
 interface TopicCheckboxesProps {
-  topic: Topic;
+  topic: BaseTopic;
   category: ChapterCategory;
   onTopicToggle: (topicId: string, checkboxIndex?: number) => void;
   isPending?: (topicId: string) => boolean;
 }
 
-export const TopicCheckboxes = memo(({ 
+function TopicCheckboxesComponent({ 
   topic, 
   category, 
   onTopicToggle, 
   isPending 
-}: TopicCheckboxesProps) => {
+}: TopicCheckboxesProps) {
   const getTopicStatus = useCallback((checkboxIndex?: number) => {
-    switch (category) {
-      case 'learning': return topic.learningStatus;
-      case 'revision': return topic.revisionCount >= (checkboxIndex !== undefined ? checkboxIndex + 1 : 0);
-      case 'practice': return topic.practiceCount >= (checkboxIndex !== undefined ? checkboxIndex + 1 : 0);
-      case 'test': return topic.testCount >= (checkboxIndex !== undefined ? checkboxIndex + 1 : 0);
-      default: return false;
+    if (checkboxIndex === undefined) {
+      return isTopicCompletedForCategory(topic, category);
     }
-  }, [category, topic.learningStatus, topic.revisionCount, topic.practiceCount, topic.testCount]);
+    
+    switch (category) {
+      case 'learning': 
+        return topic.learningStatus;
+      case 'revision': 
+        return topic.revisionCount >= (checkboxIndex + 1);
+      case 'practice': 
+        return topic.practiceCount >= (checkboxIndex + 1);
+      case 'test': 
+        return topic.testCount >= (checkboxIndex + 1);
+      default: 
+        return false;
+    }
+  }, [category, topic]);
 
   const handleToggle = useCallback((index?: number) => {
     onTopicToggle(topic.id, index);
@@ -71,6 +72,7 @@ export const TopicCheckboxes = memo(({
       ))}
     </div>
   );
-});
+}
 
-TopicCheckboxes.displayName = 'TopicCheckboxes'; 
+TopicCheckboxesComponent.displayName = 'TopicCheckboxes';
+export const TopicCheckboxes = memo(TopicCheckboxesComponent); 
