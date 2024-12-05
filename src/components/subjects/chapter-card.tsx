@@ -152,7 +152,7 @@ const SortableTopicItem = memo(({
         <label
           htmlFor={`${topic.id}-${category}`}
           className={cn(
-            "text-sm flex-1",
+            "text-sm md:text-lg text-gray-200 flex-1",
             isCompleted && "line-through"
           )}
         >
@@ -336,10 +336,10 @@ export function ChapterCard({
                 !isCollapsed && "rotate-180"
               )} />
               <div className="min-w-0 flex-1">
-                <h3 className="text-lg font-medium truncate">{name}</h3>
+                <h3 className="text-lg md:text-xl font-medium truncate">{name}</h3>
               </div>
             </div>
-            <div className="flex items-center gap-2 ml-6 sm:ml-0 flex-shrink-0">
+            <div className="flex items-center sm:justify-end gap-2 ml-6 sm:ml-0 flex-shrink-0">
               <Badge 
                 variant="secondary" 
                 className={cn("font-medium shrink-0", getCategoryBadgeStyle(category))}

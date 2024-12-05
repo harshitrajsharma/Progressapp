@@ -4,14 +4,12 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { withRetry } from "@/lib/db"
 import Loading from "@/components/loading"
-import { EnhancedCountdown } from "@/components/dashboard/enhanced-countdown"
-import { CompetitiveAnalysis } from "@/components/dashboard/competitive-analysis"
-import { QuickStats } from "@/components/dashboard/quick-stats"
 import { StudyTimer } from "@/components/dashboard/study-timer"
+import { DashboardProgressOverview } from "@/components/dashboard/progress-overview"
 import { redirect } from "next/navigation"
 import { User, MockTest, DailyActivity, StudyStreak } from "@prisma/client"
 import { SubjectWithRelations } from "@/lib/calculations/types"
-import { calculateDashboardStats } from "@/lib/calculations/dashboard"
+import { calculateDashboardProgress } from "@/lib/calculations/dashboard-progress"
 
 interface DashboardUser extends User {
   mockTests: MockTest[];
@@ -50,8 +48,8 @@ async function getDashboardData(email: string): Promise<DashboardUser | null> {
           take: 7 // Last 7 days
         }
       },
-    })
-    return user
+    }) as DashboardUser | null;
+    return user;
   })
 }
 
@@ -70,46 +68,34 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
   const user = await getDashboardData(userEmail)
   if (!user?.examName || !user.examDate) redirect("/onboarding")
 
-  const mockTestScores = user.mockTests.map(test => test.score)
-  const currentScore = mockTestScores.length > 0
-    ? mockTestScores[mockTestScores.length - 1]
-    : 0
-
-  const dashboardStats = calculateDashboardStats(
-    user.subjects,
-    user.dailyActivities,
-    user.studyStreak,
-    user.mockTests
-  )
+  const progress = calculateDashboardProgress(user.subjects)
+  
 
   return (
-    <div className="space-y-8">
+    <div className="md:p-8 space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Welcome back!</h1>
+        <h1 className="text-3xl font-bold">Welcome back!</h1>
         <p className="text-muted-foreground">
           Here&apos;s an overview of your {user.examName} preparation
         </p>
       </div>
 
-      <div className="grid gap-8 md:grid-cols-[1fr,300px]">
-        <div className="space-y-8">
-          <EnhancedCountdown 
-            examDate={user.examDate} 
-            examName={user.examName} 
-          />
-
-          <QuickStats stats={dashboardStats} />
-
-          <CompetitiveAnalysis
-            currentScore={currentScore}
-            targetScore={user.targetScore || 0}
-            mockTestScores={mockTestScores}
-          />
+      {/* Main Content */}
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
+        {/* Left Column - Strategy & Timer */}
+        <div className="space-y-6">
+          <StudyTimer />
         </div>
 
-        <div className="space-y-8">
-          <StudyTimer />
-          {/* More sidebar components will go here */}
+        {/* Right Column - Progress Overview */}
+        <div className="space-y-6">
+          <div className="bg-black/90 rounded-lg">
+            <DashboardProgressOverview 
+              progress={progress} 
+              subjects={user.subjects} 
+            />
+          </div>
         </div>
       </div>
     </div>

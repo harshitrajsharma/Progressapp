@@ -51,6 +51,9 @@ model User {
   studyStreak   StudyStreak?
   dailyActivities DailyActivity[]
   studyGoals    StudyGoal[]
+  studyPhases   StudyPhase[]
+  dailySchedules DailySchedule[]
+  performanceAnalytics PerformanceAnalytics[]
   examName      String?   // Added exam name
   examDate      DateTime? // Added exam date
   targetScore   Int?      // Target score percentage
@@ -84,6 +87,7 @@ model Subject {
   chapters         Chapter[]
   tests           Test[]
   mockTests       MockTest[]
+  performanceAnalytics PerformanceAnalytics[]
   userId          String
   user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
@@ -114,13 +118,17 @@ model Topic {
   id              String    @id @default(cuid()) @map("_id")
   name            String
   important       Boolean   @default(false)
-  learningStatus  Boolean   @default(false)  // Single checkmark
-  revisionCount   Int       @default(0)      // Progress out of 3
-  practiceCount   Int       @default(0)      // Progress out of 3
-  testCount       Int       @default(0)      // Progress out of 3
-  position        Int       @default(0)      // Position in the chapter's topic list
+  difficulty      TopicDifficulty @default(MEDIUM)  // New field
+  learningStatus  Boolean   @default(false)
+  revisionCount   Int       @default(0)
+  practiceCount   Int       @default(0)
+  testCount       Int       @default(0)
+  position        Int       @default(0)
   lastRevised     DateTime?
   nextRevision    DateTime?
+  errorRate       Float     @default(0)    // New field: Track error frequency
+  timeSpent       Int       @default(0)    // New field: Minutes spent on topic
+  confidenceScore Float     @default(0)    // New field: 0-100 confidence rating
   chapterId       String
   chapter         Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
   createdAt       DateTime  @default(now())
@@ -220,5 +228,69 @@ model StudyGoal {
   updatedAt   DateTime @updatedAt
 
   @@index([userId])
-} 
+}
+
+model StudyPhase {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name          String   // Foundation, Advanced, Test Practice
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean  @default(false)
+  dailyGoals    Json     // Structured daily targets
+  priorities    Json     // Subject priorities for the phase
+  progress      Json     // Phase-specific progress metrics
+  adaptiveParams Json    // Dynamic adjustment parameters
+  schedules     DailySchedule[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model DailySchedule {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  phaseId       String
+  phase         StudyPhase @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  date          DateTime
+  schedule      Json     // Detailed daily schedule
+  completion    Json     // Completion status
+  performance   Json     // Daily performance metrics
+  adaptiveScore Float    @default(0) // For schedule optimization
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([phaseId])
+  @@index([date])
+}
+
+model PerformanceAnalytics {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  date          DateTime
+  metrics       Json     // Detailed performance data
+  weakAreas     String[] // Array of topic IDs
+  strongAreas   String[] // Array of topic IDs
+  recommendations Json   // Study recommendations
+  trends        Json     // Performance trends
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+  @@index([date])
+}
+
+enum TopicDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
 

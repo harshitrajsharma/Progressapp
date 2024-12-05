@@ -83,11 +83,21 @@ export async function withRetry<T>(
 
 function isRetryableError(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
-    const retryableCodes = ['P1001', 'P1002', 'P1008', 'P1013']
+    const retryableCodes = ['P1001', 'P1002', 'P1008', 'P1013', 'P2010']
     return retryableCodes.includes(error.code)
   }
-  return error instanceof Prisma.PrismaClientRustPanicError ||
-         error instanceof Prisma.PrismaClientInitializationError
+  
+  if (error instanceof Error) {
+    const errorMessage = error.message.toLowerCase()
+    return errorMessage.includes('connection') ||
+           errorMessage.includes('timeout') ||
+           errorMessage.includes('server selection') ||
+           errorMessage.includes('network') ||
+           error instanceof Prisma.PrismaClientRustPanicError ||
+           error instanceof Prisma.PrismaClientInitializationError
+  }
+  
+  return false
 }
 
 // Cleanup

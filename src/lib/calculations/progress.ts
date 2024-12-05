@@ -228,9 +228,8 @@ function calculateTestAverage(subject: SubjectWithRelations): number {
  */
 export function calculateSubjectProgress(subject: SubjectWithRelations): SubjectProgress {
   const chapters = getSafeChapters(subject);
-  const allTopics = chapters.flatMap(chapter => getSafeTopics(chapter));
   
-  if (allTopics.length === 0) {
+  if (chapters.length === 0) {
     return {
       learning: 0,
       revision: 0,
@@ -248,20 +247,24 @@ export function calculateSubjectProgress(subject: SubjectWithRelations): Subject
     }
   }
 
-  // Calculate progress stats for each category
+  // Calculate progress for each chapter
+  const chapterProgress = chapters.map(chapter => calculateChapterProgress(chapter));
+
+  // Calculate average progress across chapters (each chapter contributes equally)
+  const progress = {
+    learning: chapterProgress.reduce((sum, cp) => sum + cp.learning, 0) / chapters.length,
+    revision: chapterProgress.reduce((sum, cp) => sum + cp.revision, 0) / chapters.length,
+    practice: chapterProgress.reduce((sum, cp) => sum + cp.practice, 0) / chapters.length,
+    test: chapterProgress.reduce((sum, cp) => sum + cp.test, 0) / chapters.length
+  };
+
+  // Aggregate stats from all chapters for reference
+  const allTopics = chapters.flatMap(chapter => getSafeTopics(chapter));
   const stats = {
     learning: calculateProgressStats(allTopics, 'learning'),
     revision: calculateProgressStats(allTopics, 'revision'),
     practice: calculateProgressStats(allTopics, 'practice'),
     test: calculateProgressStats(allTopics, 'test')
-  };
-
-  // Calculate percentages for each mode
-  const progress = {
-    learning: stats.learning.percentage,
-    revision: stats.revision.percentage,
-    practice: stats.practice.percentage,
-    test: stats.test.percentage
   };
 
   // Calculate study modes progress (80% of total)
