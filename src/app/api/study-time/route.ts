@@ -11,7 +11,7 @@ export async function POST(req: Request) {
     }
 
     const json = await req.json()
-    const { duration, endTime } = json
+    const { duration } = json
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
