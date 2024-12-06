@@ -11,8 +11,6 @@ import {
   GraduationCap,
   BarChart3,
   BookOpen,
-  TestTube,
-  Settings,
   LogOut,
   Menu,
 } from "lucide-react";
@@ -79,30 +77,6 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
           >
             <BookOpen className="h-5 w-5 text-green-500" />
             {!isCollapsed && <span>Subjects</span>}
-          </Button>
-        </Link>
-        <Link href="/tests">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname?.startsWith("/tests") && "bg-secondary"
-            )}
-          >
-            <TestTube className="h-5 w-5 text-purple-500" />
-            {!isCollapsed && <span>Tests</span>}
-          </Button>
-        </Link>
-        <Link href="/settings">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname?.startsWith("/settings") && "bg-secondary"
-            )}
-          >
-            <Settings className="h-5 w-5 text-orange-500" />
-            {!isCollapsed && <span>Settings</span>}
           </Button>
         </Link>
       </div>

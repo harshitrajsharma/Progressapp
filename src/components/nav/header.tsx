@@ -4,6 +4,7 @@ import { UserNav } from "@/components/user-nav";
 import { MobileSidebar } from "@/components/nav/sidebar";
 import { Shell } from "@/components/shell";
 import { format } from "date-fns";
+import { Clock } from "@/components/nav/clock";
 
 export function Header() {
   const currentDate = format(new Date(), "do MMM yyyy");
@@ -20,7 +21,8 @@ export function Header() {
               </span>
             </div>
           </div>
-          <div className="flex items-center">
+          <div className="flex items-center gap-4">
+            <Clock />
             <UserNav />
           </div>
         </div>

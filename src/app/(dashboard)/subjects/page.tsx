@@ -13,6 +13,7 @@ import { DndContext, DragEndEvent, DragOverlay, DragStartEvent, MouseSensor, Tou
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { useSubjectReorder } from '@/hooks/use-subject-reorder'
 import { useState, useMemo } from 'react'
+import { SmartRecommendations } from "@/components/recommendations/smart-recommendations";
 
 type SubjectCategory = 'not-started' | 'in-progress' | 'completed';
 
@@ -229,6 +230,7 @@ function getSubjectCategory(subject: SubjectWithRelations): SubjectCategory {
 
 export default function SubjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const { subjects } = useSubjects();
 
   useEffect(() => {
     const handleSearch = (e: CustomEvent<string>) => {
@@ -248,22 +250,28 @@ export default function SubjectsPage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 sm:gap-4 w-full">
+      {/* Add Smart Recommendations */}
+      {subjects && subjects.length > 0 && (
+        <SmartRecommendations subjects={subjects} />
+      )}
+
+      {/* Rest of the page content */}
+      <div className="flex items-center justify-between">
         <SearchSubjects />
-        <div className="scale-90 sm:scale-100">
-          <AddSubjectButton />
-        </div>
+        <AddSubjectButton />
       </div>
 
-      <Suspense fallback={
-        <div className="space-y-6 sm:space-y-8">
-          <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <SubjectCardSkeleton key={i} />
-            ))}
+      <Suspense 
+        fallback={
+          <div className="space-y-6 sm:space-y-8">
+            <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <SubjectCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
-        </div>
-      }>
+        }
+      >
         <SubjectsGrid searchQuery={searchQuery} />
       </Suspense>
     </div>
