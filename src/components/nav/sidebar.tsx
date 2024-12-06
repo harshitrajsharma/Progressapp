@@ -33,7 +33,7 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
           )}
         >
           <GraduationCap className="h-7 w-7 text-blue-500" />
-          {!isCollapsed && <span>GATE CSE</span>}
+          {!isCollapsed && <span>Progress</span>}
         </Link>
         <Button
           variant="ghost"
