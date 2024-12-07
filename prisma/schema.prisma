@@ -67,6 +67,7 @@ model User {
   studyProgress StudyProgress[]
   gateTests     GateTest[]
   testProgress  TestProgress[]
+  focusSessions FocusSession[]
 }
 
 model VerificationToken {
@@ -99,6 +100,7 @@ model Subject {
   updatedAt       DateTime  @updatedAt
   performanceMetrics PerformanceMetrics[]
   testProgressRecords TestProgress[]
+  focusSessions     FocusSession[]
 
   @@index([userId])
 }
@@ -214,6 +216,7 @@ model DailyActivity {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  @@unique([userId, date])
   @@index([userId])
   @@index([date])
 }
@@ -483,4 +486,26 @@ model TestProgress {
   @@index([userId])
   @@index([subjectId])
 } 
+
+model FocusSession {
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId     String
+  subject       Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  startTime     DateTime
+  endTime       DateTime?
+  pausedAt      DateTime?
+  totalDuration Int      // in minutes
+  pausedDuration Int     @default(0)  // in minutes
+  isActive      Boolean  @default(true)
+  phaseType     String   // learning, revision, practice
+  breaks        Int      @default(0)
+  skipBreaks    Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+}
 

@@ -4,10 +4,11 @@ import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/db"
 import { withRetry } from "@/lib/db"
 import Loading from "@/components/loading"
-import { StudyTimer } from "@/components/dashboard/study-timer"
+// import { StudyTimer } from "@/components/dashboard/study-timer"
 import { DashboardProgressOverview } from "@/components/dashboard/progress-overview"
 import { SubjectCount } from "@/components/recommendations/subject-count"
 import { ExamCountdown } from "@/components/dashboard/exam-countdown"
+import { TopicWeightageAnalysis } from "@/components/dashboard/topic-weightage-analysis"
 import { redirect } from "next/navigation"
 import { User, MockTest, DailyActivity, StudyStreak } from "@prisma/client"
 import { SubjectWithRelations } from "@/lib/calculations/types"
@@ -88,8 +89,9 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
       <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
         {/* Left Column - Strategy & Timer */}
         <div className="space-y-6">
-          <StudyTimer />
+          {/* <StudyTimer /> */}
           <SubjectCount subjects={user.subjects} />
+          <TopicWeightageAnalysis subjects={user.subjects} />
         </div>
 
         {/* Right Column - Progress Overview & Exam Countdown */}

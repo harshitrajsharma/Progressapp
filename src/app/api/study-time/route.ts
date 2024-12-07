@@ -1,122 +1,170 @@
-import { NextResponse } from "next/server"
-import { getServerSession } from "next-auth"
-import { prisma } from "@/lib/db"
-import { authOptions } from "@/lib/auth"
+// import { NextResponse } from "next/server"
+// import { getServerSession } from "next-auth"
+// import { prisma } from "@/lib/db"
+// import { authOptions } from "@/lib/auth"
 
-export async function POST(req: Request) {
-  try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user?.email) {
-      return new NextResponse("Unauthorized", { status: 401 })
-    }
+// export async function POST(req: Request) {
+//   try {
+//     const session = await getServerSession(authOptions)
+//     if (!session?.user) {
+//       return new NextResponse("Unauthorized", { status: 401 })
+//     }
 
-    const json = await req.json()
-    const { duration, subjectId, phaseType } = json
+//     const body = await req.json()
+//     const { action, duration, skipBreaks, elapsedTime } = body
 
-    const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
-      include: {
-        studyStreak: true,
-        dailyActivities: {
-          where: {
-            date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0))
-            }
-          }
-        }
-      }
-    })
+//     switch (action) {
+//       case 'start': {
+//         const focusSession = await prisma.focusSession.create({
+//           data: {
+//             userId: session.user.id,
+//             startTime: new Date(),
+//             totalDuration: duration,
+//             isActive: true,
+//             skipBreaks,
+//             breaks: 0,
+//             pausedDuration: 0
+//           }
+//         })
+//         return NextResponse.json({ success: true, focusSession })
+//       }
 
-    if (!user) {
-      return new NextResponse("User not found", { status: 404 })
-    }
+//       case 'pause': {
+//         const activeSession = await prisma.focusSession.findFirst({
+//           where: {
+//             userId: session.user.id,
+//             isActive: true,
+//             endTime: null
+//           }
+//         })
 
-    // Get or create today's activity
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
+//         if (!activeSession) {
+//           return new NextResponse("No active session found", { status: 404 })
+//         }
 
-    let dailyActivity = user.dailyActivities[0]
+//         const updatedSession = await prisma.focusSession.update({
+//           where: { id: activeSession.id },
+//           data: {
+//             isActive: false,
+//             pausedAt: new Date(),
+//             pausedDuration: activeSession.pausedDuration + elapsedTime
+//           }
+//         })
 
-    if (!dailyActivity) {
-      dailyActivity = await prisma.dailyActivity.create({
-        data: {
-          userId: user.id,
-          date: today,
-          studyTime: duration,
-          topicsCount: 0,
-          testsCount: 0
-        }
-      })
-    } else {
-      dailyActivity = await prisma.dailyActivity.update({
-        where: { id: dailyActivity.id },
-        data: {
-          studyTime: dailyActivity.studyTime + duration
-        }
-      })
-    }
+//         return NextResponse.json({ success: true, focusSession: updatedSession })
+//       }
 
-    // Update subject progress based on phase type
-    if (subjectId && phaseType) {
-      const subject = await prisma.subject.findUnique({
-        where: { id: subjectId }
-      })
+//       case 'resume': {
+//         const pausedSession = await prisma.focusSession.findFirst({
+//           where: {
+//             userId: session.user.id,
+//             isActive: false,
+//             endTime: null
+//           }
+//         })
 
-      if (subject) {
-        const progressField = `${phaseType}Progress` as keyof typeof subject
-        const currentProgress = subject[progressField] as number || 0
-        const weightedProgress = Math.min(100, currentProgress + (duration / 60) * 0.5)
+//         if (!pausedSession) {
+//           return new NextResponse("No paused session found", { status: 404 })
+//         }
 
-        await prisma.subject.update({
-          where: { id: subjectId },
-          data: {
-            [progressField]: weightedProgress,
-            overallProgress: (subject.learningProgress + subject.revisionProgress + subject.practiceProgress + subject.testProgress) / 4
-          }
-        })
-      }
-    }
+//         const updatedSession = await prisma.focusSession.update({
+//           where: { id: pausedSession.id },
+//           data: {
+//             isActive: true,
+//             pausedAt: null,
+//             breaks: pausedSession.breaks + 1
+//           }
+//         })
 
-    // Update study streak
-    const streak = user.studyStreak
-    let currentStreak = 0
+//         return NextResponse.json({ success: true, focusSession: updatedSession })
+//       }
 
-    if (streak) {
-      const lastStudyDate = new Date(streak.lastStudyDate)
-      const today = new Date()
-      const diffDays = Math.floor((today.getTime() - lastStudyDate.getTime()) / (1000 * 60 * 60 * 24))
+//       case 'stop': {
+//         const activeSession = await prisma.focusSession.findFirst({
+//           where: {
+//             userId: session.user.id,
+//             endTime: null
+//           }
+//         })
 
-      let newStreak = streak.currentStreak
-      if (diffDays === 0) {
-        // Same day, no change
-        currentStreak = newStreak
-      } else if (diffDays === 1) {
-        // Next day, increment streak
-        newStreak += 1
-        currentStreak = newStreak
-      } else {
-        // Streak broken
-        newStreak = 1
-        currentStreak = newStreak
-      }
+//         if (!activeSession) {
+//           return new NextResponse("No session found", { status: 404 })
+//         }
 
-      await prisma.studyStreak.update({
-        where: { id: streak.id },
-        data: {
-          currentStreak: newStreak,
-          longestStreak: Math.max(streak.longestStreak, newStreak),
-          dailyProgress: Math.floor(dailyActivity.studyTime / 60),
-          lastStudyDate: new Date()
-        }
-      })
-    }
+//         // Update focus session
+//         const updatedSession = await prisma.focusSession.update({
+//           where: { id: activeSession.id },
+//           data: {
+//             isActive: false,
+//             endTime: new Date(),
+//             totalDuration: duration
+//           }
+//         })
 
-    return NextResponse.json({
-      dailyActivity,
-      currentStreak
-    })
-  } catch (error) {
-    console.error("[STUDY_TIME_POST]", error)
-    return new NextResponse("Internal Error", { status: 500 })
-  }
-} 
+//         // Update daily activity
+//         const today = new Date()
+//         today.setHours(0, 0, 0, 0)
+
+//         const dailyActivity = await prisma.dailyActivity.upsert({
+//           where: {
+//             userId_date: {
+//               userId: session.user.id,
+//               date: today
+//             }
+//           },
+//           create: {
+//             userId: session.user.id,
+//             date: today,
+//             studyTime: duration,
+//             topicsCount: 0,
+//             testsCount: 0
+//           },
+//           update: {
+//             studyTime: {
+//               increment: duration
+//             }
+//           }
+//         })
+
+//         // Update streak
+//         const yesterday = new Date(today)
+//         yesterday.setDate(yesterday.getDate() - 1)
+
+//         const yesterdayActivity = await prisma.dailyActivity.findFirst({
+//           where: {
+//             userId: session.user.id,
+//             date: yesterday
+//           }
+//         })
+
+//         const studyStreak = await prisma.studyStreak.upsert({
+//           where: {
+//             userId: session.user.id
+//           },
+//           create: {
+//             userId: session.user.id,
+//             currentStreak: 1,
+//             lastStudyDate: today
+//           },
+//           update: {
+//             currentStreak: yesterdayActivity ? { increment: 1 } : 1,
+//             lastStudyDate: today
+//           }
+//         })
+
+//         return NextResponse.json({
+//           success: true,
+//           focusSession: updatedSession,
+//           dailyActivity,
+//           currentStreak: studyStreak.currentStreak
+//         })
+//       }
+
+//       default:
+//         return new NextResponse("Invalid action", { status: 400 })
+//     }
+//   } catch (error) {
+//     console.error("[STUDY_TIME]", error)
+//     return new NextResponse("Internal Error", { status: 500 })
+//   }
+// } 
