@@ -11,7 +11,6 @@ import {
   isSameMonth, 
   isSameDay, 
   isToday,
-  addDays,
   startOfWeek,
   endOfWeek,
   addMonths,
@@ -162,11 +161,10 @@ export function ExamCountdown({ examDate, dailyActivities }: ExamCountdownProps)
           </div>
 
           <div className="grid grid-cols-7 gap-1">
-            {days.map((day, index) => {
+            {days.map((day) => {
               const activityLevel = getActivityLevel(day);
               const isCurrentMonth = isSameMonth(day, currentMonth);
               const isExamDay = isSameDay(day, examDate);
-              const isPastDay = isBefore(day, currentDate);
               const isFutureDay = isAfter(day, examDate);
               
               return (
