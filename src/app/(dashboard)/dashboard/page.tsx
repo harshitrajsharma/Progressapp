@@ -85,7 +85,7 @@ async function DashboardContent({ userEmail }: { userEmail: string }) {
 
       {/* Main Content */}
 
-      <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
+      <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.4fr_0.6fr]">
         {/* Left Column - Strategy & Timer */}
         <div className="space-y-6">
           <StudyTimer />

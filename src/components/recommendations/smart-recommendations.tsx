@@ -64,7 +64,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
           <div>
             <h1 className="text-lg font-semibold">Smart Recommendations</h1>
             <p className="text-sm text-muted-foreground">
-              Based on your progress and GATE weightage
+              Based on your progress and exam weightage
             </p>
           </div>
           <Button variant="outline" size="icon" className="h-8 w-8">

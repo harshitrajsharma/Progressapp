@@ -67,6 +67,7 @@ model User {
   studyProgress StudyProgress[]
   gateTests     GateTest[]
   testProgress  TestProgress[]
+  focusSessions FocusSession[]
 }
 
 model VerificationToken {
@@ -99,6 +100,7 @@ model Subject {
   updatedAt       DateTime  @updatedAt
   performanceMetrics PerformanceMetrics[]
   testProgressRecords TestProgress[]
+  focusSessions     FocusSession[]
 
   @@index([userId])
 }
@@ -196,25 +198,36 @@ model StudyStreak {
   user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   currentStreak Int      @default(0)
   longestStreak Int      @default(0)
-  lastStudyDate DateTime
-  dailyGoals    Int      @default(0)  // Minutes or hours
-  dailyProgress Int      @default(0)
+  lastStudyDate DateTime?
+  streakHistory Json     @default("[]") // Array of { date: DateTime, goalMet: boolean }
+  
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
 
 model DailyActivity {
-  id          String   @id @default(cuid()) @map("_id")
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  date        DateTime
-  studyTime   Int      // Minutes studied
-  topicsCount Int      // Topics covered
-  testsCount  Int      // Tests taken
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid()) @map("_id")
+  userId        String
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date          DateTime
+  studyTime     Int      @default(0)  // in minutes
+  goalCompleted Boolean  @default(false)
+  dailyGoal     Int      @default(480)  // 8 hours in minutes
+  
+  // Break down by phase type
+  learningTime  Int      @default(0)
+  revisionTime  Int      @default(0)
+  practiceTime  Int      @default(0)
+  
+  // Metrics
+  productivity  Float    @default(0)  // 0-100
+  focusScore    Float    @default(0)  // 0-100
+  interruptions Int      @default(0)
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
-  @@index([userId])
+  @@unique([userId, date])
   @@index([date])
 }
 
@@ -483,4 +496,44 @@ model TestProgress {
   @@index([userId])
   @@index([subjectId])
 } 
+
+model FocusSession {
+  id              String    @id @default(cuid()) @map("_id")
+  userId          String
+  user            User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId       String
+  subject         Subject   @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  startTime       DateTime
+  endTime         DateTime?
+  pausedAt        DateTime?
+  totalDuration   Int       // in minutes
+  pausedDuration  Int       @default(0)  // in minutes
+  isActive        Boolean   @default(true)
+  status          String    @default("active") // active, paused, completed
+  phaseType       String    // learning, revision, practice
+  
+  // Break tracking
+  breaks          Json      @default("[]") // Array of break periods: [{ start: DateTime, end: DateTime, type: 'short'|'long' }]
+  skipBreaks      Boolean   @default(false)
+  lastBreakAt     DateTime?
+  
+  // Metrics
+  metrics         Json?     // { focusScore: number, interruptions: number, productivity: number }
+  
+  // Offline sync
+  lastSyncedAt    DateTime  @default(now())
+  offlineChanges  Json?     // Store offline changes to be synced
+  
+  // Session validation
+  deviceId        String?   // To handle multiple devices
+  timezone        String    @default("UTC")
+  
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([subjectId])
+  @@index([startTime])
+  @@index([status])
+}
 
