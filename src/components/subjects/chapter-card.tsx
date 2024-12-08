@@ -152,7 +152,7 @@ const SortableTopicItem = memo(({
         <label
           htmlFor={`${topic.id}-${category}`}
           className={cn(
-            "text-sm md:text-lg text-gray-200 flex-1",
+            "text-sm md:text-lg dark:text-gray-200 flex-1",
             isCompleted && "line-through"
           )}
         >
