@@ -16,11 +16,13 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: 'Progress Tracking',
-  description: 'Track your exam preparation progress',
+  description: 'Track your exam preparation progress in a smart way. A product from xLab.',
+  manifest: '/manifest.json',
+  themeColor: '#000000',
   icons: {
-    icon: '/xlogo.png',
-    shortcut: '/xlogo.png',
-    apple: '/xlogo.png',
+    icon: './xMWLogo.svg',
+    shortcut: '/xMWLogo.svg',
+    apple: '/xMWLogo.svg',
   },
 };
 

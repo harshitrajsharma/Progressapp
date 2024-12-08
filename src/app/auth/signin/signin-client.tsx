@@ -10,30 +10,66 @@ export default function SignInClient() {
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-        <div className="flex flex-col space-y-2 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight">
-            Welcome to Progress Tracking App
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Sign in to track your Exam preparation
-          </p>
-        </div>
-        <Button
-          onClick={() => signIn('google', { callbackUrl })}
-          variant="outline"
-          className="flex items-center justify-center space-x-2"
-        >
+    <div className="relative flex min-h-screen overflow-hidden">
+      {/* Animated gradient background */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-pink-600 opacity-60 dark:opacity-50"
+        style={{
+          backgroundSize: '400% 400%',
+          animation: 'gradient 15s ease infinite',
+        }}
+      />
+      
+      {/* Black filter overlay */}
+      <div className="absolute inset-0 bg-black/40" />
+
+      {/* Content */}
+      <div className="relative flex w-full items-center justify-center md:justify-start">
+        {/* Left side with logo */}
+        <div className="hidden md:flex md:w-1/2 md:items-center md:justify-center">
           <Image
-            src="/google.svg"
-            width={20}
-            height={20}
-            alt="Google"
-            className="mr-2"
+            src="/xMWLogo.svg"
+            alt="xMW Logo"
+            width={300}
+            height={300}
+            className=""
+            priority
           />
-          Continue with Google
-        </Button>
+        </div>
+
+        {/* Right side with sign in */}
+        <div className="w-full max-w-sm p-8 md:w-1/2">
+          <div className="mb-8 text-center md:text-left">
+            <Image
+              src="/xMWLogo.svg"
+              alt="xMW Logo"
+              width={80}
+              height={80}
+              className="mb-6 inline-block md:hidden"
+            />
+            <h1 className="text-2xl font-bold tracking-tight text-white">
+              Welcome to Progress Tracking
+            </h1>
+            <p className="mt-2 text-sm text-gray-200">
+              Sign in to track your exam preparation progress
+            </p>
+          </div>
+
+          <Button
+            onClick={() => signIn('google', { callbackUrl })}
+            variant="outline"
+            className="w-full bg-white/10 backdrop-blur hover:bg-white/20"
+          >
+            <Image
+              src="/google.svg"
+              width={20}
+              height={20}
+              alt="Google"
+              className="mr-2"
+            />
+            Continue with Google
+          </Button>
+        </div>
       </div>
     </div>
   );

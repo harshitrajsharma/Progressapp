@@ -86,7 +86,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                 subject={subject}
                 progress={revisionProgress}
                 weightage={subject.weightage}
-                status="High priority - Start soon"
+                status="Revise Now"
                 statusColor="text-orange-500"
                 className="bg-emerald-50 dark:bg-emerald-900/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-800/80"
                 variant="emerald"
