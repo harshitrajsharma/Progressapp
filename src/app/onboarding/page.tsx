@@ -89,7 +89,7 @@ export default function OnboardingPage() {
     <div className="flex min-h-screen items-center justify-center">
       <Card className="w-[400px]">
         <CardHeader>
-          <CardTitle>Welcome to GATE Progress!</CardTitle>
+          <CardTitle>Welcome to Exam Progress Tracker!</CardTitle>
           <CardDescription>
             Let&rsquo;s set up your exam preferences to get started
           </CardDescription>
@@ -104,7 +104,7 @@ export default function OnboardingPage() {
                   <FormItem>
                     <FormLabel>Exam Name</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="e.g. GATE CSE 2025" />
+                      <Input {...field} placeholder="e.g. Your exam name" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

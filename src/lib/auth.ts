@@ -11,6 +11,7 @@ declare module "next-auth" {
       name?: string | null
       email?: string | null
       image?: string | null
+      examName?: string | null
     }
   }
 }
@@ -31,12 +32,19 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub!
+        session.user.examName = token.examName as string | null;
       }
       return session
     },
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
+        // Get user data only once when token is created
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { examName: true }
+        });
+        token.examName = dbUser?.examName;
       }
       return token
     },

@@ -1,6 +1,7 @@
 'use client';
 
 import { Suspense, useEffect } from "react";
+import { useSession } from "next-auth/react";
 import { Clock, CheckCircle2, AlertCircle } from "lucide-react";
 import { AddSubjectButton } from "@/components/subjects/add-subject-button";
 import { SubjectCard } from "@/components/subjects/subject-card";
@@ -231,6 +232,7 @@ function getSubjectCategory(subject: SubjectWithRelations): SubjectCategory {
 export default function SubjectsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const { subjects } = useSubjects();
+  const { data: session } = useSession();
 
   useEffect(() => {
     const handleSearch = (e: CustomEvent<string>) => {
@@ -246,7 +248,7 @@ export default function SubjectsPage() {
       <div className="space-y-1">
         <h1 className="text-3xl font-bold tracking-tight">Subjects</h1>
         <p className="text-muted-foreground">
-          Manage your GATE CSE 2025 subjects and track progress
+          Manage your {session?.user?.examName || "exam"} subjects and track progress
         </p>
       </div>
 

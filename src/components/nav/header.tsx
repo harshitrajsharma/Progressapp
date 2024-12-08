@@ -1,10 +1,10 @@
 'use client';
 
 import { UserNav } from "@/components/user-nav";
-import { MobileSidebar } from "@/components/nav/sidebar";
 import { Shell } from "@/components/shell";
 import { format } from "date-fns";
 import { Clock } from "@/components/nav/clock";
+import { Calendar } from "lucide-react";
 
 export function Header() {
   const currentDate = format(new Date(), "do MMM yyyy");
@@ -15,13 +15,15 @@ export function Header() {
         <div className="flex h-14 items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <MobileSidebar />
-              <span className="text-sm font-medium">
-                {currentDate}
-              </span>
+              <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-lg">
+                <Calendar className="h-4 w-4  text-blue-500" />
+                <span className="text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
+                  {currentDate}
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-1 md:gap-4">
             <Clock />
             <UserNav />
           </div>

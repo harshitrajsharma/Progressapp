@@ -22,19 +22,16 @@ const getLevelColor = (level: number) => {
   return "text-purple-500";
 };
 
-const getLevelBgColor = (level: number, nextLevel?: number) => {
+const getLevelBgColor = (level: number) => {
   const getColor = (level: number) => {
-    if (level <= 2) return "red";
-    if (level <= 4) return "orange";
-    if (level <= 6) return "yellow";
-    if (level <= 8) return "emerald";
-    return "purple";
+    if (level <= 2) return "bg-gradient-to-r from-red-500/50 via-red-500/30 to-red-500/20";
+    if (level <= 4) return "bg-gradient-to-r from-orange-500/50 via-orange-500/30 to-orange-500/20";
+    if (level <= 6) return "bg-gradient-to-r from-yellow-500/50 via-yellow-500/30 to-yellow-500/20";
+    if (level <= 8) return "bg-gradient-to-r from-emerald-500/50 via-emerald-500/30 to-emerald-500/20";
+    return "bg-gradient-to-r from-purple-500/50 via-purple-500/30 to-purple-500/20";
   };
 
-  const currentColor = getColor(level);
-  const nextColor = nextLevel ? getColor(nextLevel) : currentColor;
-
-  return `from-${currentColor}-500/50 via-${currentColor}-500/30 to-${nextColor}-500/20`;
+  return getColor(level);
 };
 
 const getLevelBorderColor = (level: number) => {
@@ -95,7 +92,7 @@ export function ExamFoundationCard({ result, examName }: ExamFoundationCardProps
   const [nextLevelProgress, setNextLevelProgress] = useState(0);
   const { currentLevel, nextLevel, progressToNextLevel, strengths, areasToImprove, overallProgress } = result;
   const levelColor = getLevelColor(currentLevel.level);
-  const levelBgColor = getLevelBgColor(currentLevel.level, nextLevel?.level);
+  const levelBgColor = getLevelBgColor(currentLevel.level);
   const levelBorderColor = getLevelBorderColor(currentLevel.level);
   const LevelIcon = getLevelIcon(currentLevel.level);
 
@@ -199,7 +196,7 @@ export function ExamFoundationCard({ result, examName }: ExamFoundationCardProps
                   <div className="h-2 sm:h-2.5 w-full bg-muted/30 rounded-full overflow-hidden">
                     <motion.div
                       className={cn(
-                        "h-full bg-gradient-to-r rounded-full",
+                        "h-full rounded-full",
                         levelBgColor
                       )}
                       initial={{ width: 0 }}
@@ -218,7 +215,7 @@ export function ExamFoundationCard({ result, examName }: ExamFoundationCardProps
                     <div className="h-2 sm:h-2.5 w-full bg-muted/30 rounded-full overflow-hidden">
                       <motion.div
                         className={cn(
-                          "h-full bg-gradient-to-r rounded-full",
+                          "h-full rounded-full",
                           levelBgColor
                         )}
                         initial={{ width: 0 }}

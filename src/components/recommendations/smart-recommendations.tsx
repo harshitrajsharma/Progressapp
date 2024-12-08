@@ -1,6 +1,7 @@
 "use client";
 
 import { SubjectWithRelations } from "@/lib/calculations/types";
+import { useSession } from "next-auth/react";
 import { getSmartRecommendations } from "@/lib/recommendations/smart-recommendations";
 import { SubjectCard } from "./subject-card";
 import { RecommendationSection } from "./recommendation-section";
@@ -51,6 +52,7 @@ function filterPriorityFocusSubjects(subjects: Array<{ subject: SubjectWithRelat
 
 export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   const recommendations = getSmartRecommendations(subjects);
+  const { data: session } = useSession();
 
   // Get subjects for each category
   const reviseSubjects = recommendations.revise.slice(0, 3);
@@ -64,7 +66,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
           <div>
             <h1 className="text-lg font-semibold">Smart Recommendations</h1>
             <p className="text-sm text-muted-foreground">
-              Based on your progress and GATE weightage
+              Based on your progress and {session?.user?.examName || "exam"} weightage
             </p>
           </div>
           <Button variant="outline" size="icon" className="h-8 w-8">
@@ -117,7 +119,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
 
           <RecommendationSection
             title="Start Next"
-            description="Recommended subjects to start based on GATE weightage"
+            description={`Recommended subjects to start based on ${session?.user?.examName || "exam"} weightage`}
             className="bg-amber-100 dark:bg-amber-900/40"
           >
             {startNextSubjects.map(({ subject, weightage }) => (

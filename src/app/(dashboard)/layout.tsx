@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Header } from "@/components/nav/header";
 import { Sidebar } from "@/components/nav/sidebar";
+import { MobileBottomNavbar } from "@/components/nav/mobile-bottom-navbar";
 import { cn } from "@/lib/utils";
 
 interface DashboardLayoutProps {
@@ -41,9 +42,10 @@ export default function DashboardLayout({
       </aside>
       <div className="flex-1 flex flex-col h-screen overflow-auto">
         <Header />
-        <main className="flex-1 p-8">
+        <main className="flex-1 p-8 pb-20 md:pb-8">
           {children}
         </main>
+        <MobileBottomNavbar />
       </div>
     </div>
   );

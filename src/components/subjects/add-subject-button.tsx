@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from "react";
+import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { Plus, Check, AlertCircle } from "lucide-react";
 import {
@@ -22,6 +23,7 @@ export function AddSubjectButton() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { revalidateSubjects } = useSubjects();
+  const { data: session } = useSession();
 
   async function onSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -99,7 +101,7 @@ export function AddSubjectButton() {
         <DialogHeader>
           <DialogTitle>Add New Subject</DialogTitle>
           <DialogDescription>
-            Add a new subject to track your GATE CSE preparation
+            Add a new subject to track your {session?.user?.examName || "exam"} preparation
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="grid gap-4 py-4">
