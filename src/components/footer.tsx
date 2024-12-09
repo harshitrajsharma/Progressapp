@@ -14,7 +14,7 @@ export function Footer() {
             className=""
           />
           <p className="text-sm text-muted-foreground">
-            A product from xLab. Developed by <a href="https://harshit.xcommunity.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 font-bold text-white">Harshit</a>
+            Developed by <a href="https://harshit.xcommunity.app" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-500 font-bold">Harshit</a>. Made with the help of <a target="_blank" href="https://claude.ai/" className="underline hover:text-blue-500 text-red-500 font-bold">claude 3.5 Sonnet</a> in <a target="_blank" href="https://www.cursor.com/" className="underline hover:text-blue-500 text-red-500 font-bold">Cursor IDE</a>.
           </p>
           <span className="flex items-center gap-1 text-muted-foreground">
             <Copyright className="h-4 w-4" />

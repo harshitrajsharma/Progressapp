@@ -1,16 +1,35 @@
-import { withAuth } from "next-auth/middleware"
+import { withAuth } from "next-auth/middleware";
+import { NextResponse } from "next/server";
 
-export default withAuth({
-  callbacks: {
-    authorized: ({ token }) => !!token
+export default withAuth(
+  function middleware(req) {
+    // If it's the landing page and user is authenticated, redirect to dashboard
+    if (req.nextUrl.pathname === "/" && req.nextauth.token) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    return NextResponse.next();
   },
-  pages: {
-    signIn: "/auth/signin",
-  },
-})
+  {
+    callbacks: {
+      authorized: ({ token, req }) => {
+        // Allow public access to landing page
+        if (req.nextUrl.pathname === "/") {
+          return true;
+        }
+        // Require authentication for protected routes
+        return !!token;
+      },
+    },
+    pages: {
+      signIn: "/auth/signin",
+    },
+  }
+);
 
 export const config = {
   matcher: [
+    "/",
     "/dashboard/:path*",
     "/subjects/:path*",
     "/mock-tests/:path*",
@@ -21,4 +40,4 @@ export const config = {
     "/tests",
     "/onboarding"
   ],
-} 
+}; 
