@@ -14,7 +14,7 @@ interface SmartRecommendationsProps {
   subjects: SubjectWithRelations[];
 }
 
-const MATH_SUBJECTS = ["discrete maths", "engineering maths", "aptitude"] as const;
+const MATH_SUBJECTS = ["Discrete Maths", "Engineering Maths", "Aptitude"] as const;
 type MathSubject = typeof MATH_SUBJECTS[number];
 
 function isMathSubject(name: string): name is MathSubject {

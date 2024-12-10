@@ -70,8 +70,8 @@ export function SubjectCard({
           <span>{roundedProgress}% complete</span>
           <div className="flex items-center gap-2">
             {behindTarget !== undefined && (
-              <span className="text-green-500 hidden">
-                {Math.round(behindTarget)}% behind target
+              <span className="text-green-500 ">
+                Complete it at priority
               </span>
             )}
             {status && (
