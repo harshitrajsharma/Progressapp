@@ -8,7 +8,7 @@ import { PricingSection } from "@/components/landing/pricing-section";
 
 export default function LandingPage() {
   return (
-    <main className="min-h-screen bg-black">
+    <main className="min-h-screen">
       <LandingNavbar />
       <HeroSection />
       <FeatureSection />

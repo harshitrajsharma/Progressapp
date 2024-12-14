@@ -19,7 +19,7 @@ export function LandingNavbar() {
       <div className="container mx-auto flex items-center justify-between h-16 px-4">
         <Link href="/" className="flex items-center space-x-2">
           <span className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-blue-500 text-transparent bg-clip-text">
-            Progress
+            Progress Tracking
           </span>
         </Link>
 
@@ -43,7 +43,7 @@ export function LandingNavbar() {
             </Button>
           ) : (
             <div className="flex items-center space-x-2">
-              <Button variant="ghost" asChild>
+              <Button className=" hidden md:block" variant="ghost" asChild>
                 <Link href="/auth/signin">Sign In</Link>
               </Button>
               <Button asChild>

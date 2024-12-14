@@ -132,7 +132,7 @@ export function FeatureSection() {
     <section className="relative py-20 overflow-hidden">
       {/* Background gradient effects */}
       <div className="absolute inset-0 -z-10">
-        <div className="absolute inset-0 bg-black/90" />
+        <div className="absolute inset-0 dark:bg-black/90" />
         <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-purple-500/20 rounded-full blur-[120px]" />
         <div className="absolute bottom-1/4 -right-1/4 w-1/2 h-1/2 bg-blue-500/20 rounded-full blur-[120px]" />
       </div>
@@ -144,7 +144,7 @@ export function FeatureSection() {
         variants={containerVariants}
         className="container mx-auto px-4 sm:px-6 lg:px-8"
       >
-        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+        <div className="text-center text-black dark:text-white max-w-3xl mx-auto mb-16 space-y-4">
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -166,7 +166,7 @@ export function FeatureSection() {
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {features.map((feature) => (
             <motion.div
               key={feature.title}
@@ -174,7 +174,7 @@ export function FeatureSection() {
               variants={featureVariants}
               whileHover="hover"
               className={cn(
-                "group relative p-6 rounded-2xl border border-white/10",
+                "group relative p-6 rounded-2xl border border-black/40 dark:border-white/10",
                 "backdrop-blur-sm transition-all duration-300",
                 "hover:border-white/20 hover:translate-y-[-2px] hover:shadow-xl",
                 "bg-gradient-to-br from-white/[0.05] to-white/[0.01]"
@@ -189,12 +189,12 @@ export function FeatureSection() {
                     feature.color
                   )}
                 >
-                  <feature.icon className="w-6 h-6 text-white" />
+                  <feature.icon className="w-6 h-6" />
                 </motion.div>
-                <h3 className="text-xl font-semibold mb-2 text-white group-hover:text-white/90">
+                <h3 className="text-xl font-semibold mb-2 dark:group-hover:text-white/90">
                   {feature.title}
                 </h3>
-                <p className="text-white/60 group-hover:text-white/70 text-sm sm:text-base">
+                <p className=" dark:group-hover:text-white/70 text-sm sm:text-base">
                   {feature.description}
                 </p>
               </div>
