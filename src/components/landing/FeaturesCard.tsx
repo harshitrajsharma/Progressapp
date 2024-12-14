@@ -1,28 +1,48 @@
 import React from 'react'
 import Image from 'next/image'
 
-// Define the props interface
-interface FeaturesCardProps {
-  class?: string;
-  title: string;
-  description1: string;
-  description2: string;
-  banner: string;
-}
-
-const FeaturesCard: React.FC<FeaturesCardProps> = (props) => {
+function FeaturesCard() {
   return (
-    <div className={` flex flex-col-reverse gap-6 ${props.class} `}>
-      <div className=' md:w-3/5 flex flex-col gap-2 justify-center items-center px-16'>
-        <h1 className=' text-center text-4xl md:text-6xl '>{props.title}</h1>
-        <p className=' text-xl text-center'>{props.description1}</p>
-        <p className=' text-xl text-center'>{props.description2}</p>
-      </div>
-      <div className=' md:w-2/5 bg-gradient-to-r from-primary-200 to-secondary-200 p-6 rounded-3xl '>
-        <div className=' flex w-full h-full justify-center bg-white rounded-3xl items-center p-4 '>
-
-          <Image src={props.banner} className=' object-cover w-full h-full' alt="banner" />
-
+    <div className={` flex flex-col gap-6 `}>
+      <div className=' md:w-full bg-gradient-to-r from-primary-200 to-secondary-200 p-6 rounded-3xl '>
+        <div className=' flex flex-col w-full h-full justify-center bg-blue-500/20 rounded-3xl items-center p-2 md:p-8 '>
+          <div className=' md:w-full flex flex-col gap-2 justify-center items-center mb-12 '>
+            <h1 className=' sm:text-3xl lg:text-6xl xl:text-7xl tracking-tight text-center text-4xl md:text-4xl font-bold '><span className='text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500 animate-gradient'>Smart Components</span> for You</h1>
+          </div>
+          <div>
+            <Image
+              src="/1st.png"
+              alt="banner"
+              width={500}
+              height={300}
+              layout="responsive"
+              className='object-cover rounded-t-2xl'
+            />
+            <Image
+              src="/2nd.png"
+              alt="banner"
+              width={500}
+              height={300}
+              layout="responsive"
+              className='object-cover'
+            />
+            <Image
+              src="/3rd.png"
+              alt="banner"
+              width={500}
+              height={300}
+              layout="responsive"
+              className='object-cover'
+            />
+            <Image
+              src="/4th.png"
+              alt="banner"
+              width={500}
+              height={300}
+              layout="responsive"
+              className='object-cover rounded-b-2xl'
+            />
+          </div>
         </div>
       </div>
     </div>
