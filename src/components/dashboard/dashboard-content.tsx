@@ -32,12 +32,32 @@ export function DashboardContent({ user }: DashboardContentProps) {
 
 
             {/* Main Content */}
-            <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.2fr_0.8fr]">
-                {/* Left Column - Header, Strategy & Timer */}
-
-                <div>
+            <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.3fr_0.7fr]">
+                {/* Right Column - Progress Overview & Exam Countdown (For Mobile) */}
+                <div className="lg:hidden">
                     {/* Header */}
                     <div className="mb-6">
+                        <h1 className="text-3xl font-bold">Welcome back!</h1>
+                        <p className="text-muted-foreground">
+                            Here&apos;s an overview of your {user.examName} preparation
+                        </p>
+                    </div>
+                    <div className="space-y-6">
+                        <ExamCountdown
+                            examDate={user.examDate}
+                            dailyActivities={user.dailyActivities}
+                        />
+                        <DashboardProgressOverview
+                            progress={progress}
+                            subjects={user.subjects}
+                        />
+                    </div>
+                </div>
+
+                {/* Left Column - Header, Strategy & Timer */}
+                <div>
+                    {/* Header */}
+                    <div className="mb-6 hidden md:block">
                         <h1 className="text-3xl font-bold">Welcome back!</h1>
                         <p className="text-muted-foreground">
                             Here&apos;s an overview of your {user.examName} preparation
@@ -60,16 +80,18 @@ export function DashboardContent({ user }: DashboardContentProps) {
                     </div>
                 </div>
 
-                {/* Right Column - Progress Overview & Exam Countdown */}
-                <div className="space-y-6">
-                <DashboardProgressOverview
-                        progress={progress}
-                        subjects={user.subjects}
-                    />
-                    <ExamCountdown
-                        examDate={user.examDate}
-                        dailyActivities={user.dailyActivities}
-                    />
+                {/* Right Column - Progress Overview & Exam Countdown (For Larger Screens) */}
+                <div className="hidden lg:block">
+                    <div className="space-y-6">
+                        <ExamCountdown
+                            examDate={user.examDate}
+                            dailyActivities={user.dailyActivities}
+                        />
+                        <DashboardProgressOverview
+                            progress={progress}
+                            subjects={user.subjects}
+                        />
+                    </div>
                 </div>
             </div>
         </div>
