@@ -2,7 +2,7 @@ import { SubjectWithRelations } from "../calculations/types";
 import { calculateSubjectProgress } from "../calculations/progress";
 
 // Define math subjects constant at the top level
-const MATH_SUBJECTS = ['Discrete Mathematics', 'Engineering Mathematics', 'Aptitude'] as const;
+const MATH_SUBJECTS = ['Discrete Maths', 'Engineering Maths', 'Aptitude'] as const;
 type MathSubject = typeof MATH_SUBJECTS[number];
 
 function isMathSubject(name: string): name is MathSubject {
@@ -93,7 +93,7 @@ export function getSmartRecommendations(subjects: SubjectWithRelations[]): Smart
   const priorityFocusMath = mathSubjects
     .filter(({ progress }) => {
       const hasProgress = progress.learning > 0;
-      const notComplete = progress.learning < 100;
+      const notComplete = progress.learning < 90;
       return hasProgress && notComplete;
     })
     .sort((a, b) => b.progress.learning - a.progress.learning)
@@ -106,7 +106,7 @@ export function getSmartRecommendations(subjects: SubjectWithRelations[]): Smart
   console.log('Selected Math Subject:', priorityFocusMath);
 
   const priorityFocusOthers = nonMathSubjects
-    .filter(({ progress }) => progress.learning > 0 && progress.learning < 100)
+    .filter(({ progress }) => progress.learning > 0 && progress.learning < 90)
     .sort((a, b) => b.progress.learning - a.progress.learning)
     .slice(0, 2)
     .map(({ subject, progress }) => ({

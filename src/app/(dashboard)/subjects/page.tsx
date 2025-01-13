@@ -94,7 +94,7 @@ function SubjectsGrid({ searchQuery }: SubjectsGridProps) {
 
       if (learningProgress === 0) {
         acc.notStarted.push(subject);
-      } else if (learningProgress === 100) {
+      } else if (learningProgress >= 90) {
         acc.completed.push(subject);
       } else {
         acc.inProgress.push(subject);
