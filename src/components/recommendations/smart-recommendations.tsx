@@ -87,7 +87,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                 progress={revisionProgress}
                 weightage={subject.weightage}
                 status="Revise Now"
-                statusColor="text-orange-500"
+                statusColor="text-emerald-500"
                 className="bg-emerald-50 dark:bg-emerald-900/60 hover:bg-emerald-100/80 dark:hover:bg-emerald-800/80"
                 variant="emerald"
               />
@@ -107,7 +107,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                 weightage={subject.weightage}
                 behindTarget={index === 2 ? undefined : 17}
                 status={index === 2 ? "Math Subject - Focus Required" : undefined}
-                statusColor="text-blue-500"
+                statusColor="text-red-600"
                 className={cn(
                   "bg-blue-50 dark:bg-blue-900/60 hover:bg-blue-100/80 dark:hover:bg-blue-800/80",
                   index === 2 && "mt-4 border-t-2 border-blue-200 dark:border-blue-800 pt-2"
