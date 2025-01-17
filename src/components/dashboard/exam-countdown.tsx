@@ -29,12 +29,15 @@ interface DailyActivity {
 interface ExamCountdownProps {
   examDate: Date;
   dailyActivities: DailyActivity[];
+  variant?: 'sidebar' | 'dashboard';
 }
 
-export function ExamCountdown({ examDate, dailyActivities }: ExamCountdownProps) {
+export function ExamCountdown({ examDate, dailyActivities, variant = 'dashboard' }: ExamCountdownProps) {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [daysLeft, setDaysLeft] = useState(0);
+
+  const isSidebar = variant === 'sidebar';
 
   useEffect(() => {
     // Update current date and days left every day
@@ -82,10 +85,9 @@ export function ExamCountdown({ examDate, dailyActivities }: ExamCountdownProps)
   const prevMonth = () => {
     const prevDate = addMonths(currentMonth, -1);
     const startDate = new Date();
-    startDate.setDate(1); // Set to first day of current month
+    startDate.setDate(1);
     startDate.setHours(0, 0, 0, 0);
     
-    // Allow navigation to any month between now and exam date
     if (!isBefore(prevDate, startDate)) {
       setCurrentMonth(prevDate);
     }
@@ -108,116 +110,174 @@ export function ExamCountdown({ examDate, dailyActivities }: ExamCountdownProps)
   startDate.setHours(0, 0, 0, 0);
   const canGoPrev = !isBefore(addMonths(currentMonth, -1), startDate);
 
-  return (
-    <Card className="bg-background border">
-      <CardContent className="p-4">
-        {/* Days Left Counter */}
-        <div className="text-center mb-4 bg-[#216e39]/10 rounded-lg p-3">
-          <div className="text-5xl font-bold text-[#2ea043] mb-1 font-mono tracking-tight">
-            {daysLeft}
+  const content = (
+    <div className={cn(
+      "space-y-3",
+      !isSidebar && "p-6"
+    )}>
+      {/* Days Left Counter */}
+      <div className={cn(
+        "text-center bg-[#216e39]/10 rounded-lg",
+        isSidebar ? "p-2" : "p-4"
+      )}>
+        <div className={cn(
+          "font-bold text-[#2ea043] font-mono tracking-tight",
+          isSidebar ? "text-3xl" : "text-5xl mb-2"
+        )}>
+          {daysLeft}
+        </div>
+        <div className={cn(
+          "text-muted-foreground font-medium",
+          isSidebar ? "text-xs" : "text-sm"
+        )}>
+          Days until {format(examDate, 'dd MMM yyyy')}
+        </div>
+      </div>
+
+      {/* Calendar */}
+      <div className="rounded-lg">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1">
+            <Calendar className={cn(
+              "text-[#2ea043]",
+              isSidebar ? "h-3 w-3" : "h-4 w-4"
+            )} />
+            <h2 className={cn(
+              "font-semibold text-foreground",
+              isSidebar ? "text-xs" : "text-sm"
+            )}>
+              {format(currentMonth, isSidebar ? 'MMM yyyy' : 'MMMM yyyy')}
+            </h2>
           </div>
-          <div className="text-base text-muted-foreground font-medium">
-            Days until {format(examDate, 'dd MMM yyyy')}
+          <div className="flex gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "hover:bg-[#216e39]/10",
+                isSidebar ? "h-5 w-5" : "h-7 w-7"
+              )}
+              onClick={prevMonth}
+              disabled={!canGoPrev}
+            >
+              <ChevronLeft className={isSidebar ? "h-3 w-3" : "h-4 w-4"} />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className={cn(
+                "hover:bg-[#216e39]/10",
+                isSidebar ? "h-5 w-5" : "h-7 w-7"
+              )}
+              onClick={nextMonth}
+              disabled={!canGoNext}
+            >
+              <ChevronRight className={isSidebar ? "h-3 w-3" : "h-4 w-4"} />
+            </Button>
           </div>
         </div>
 
-        {/* Calendar */}
-        <div className="rounded-lg">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Calendar className="h-4 w-4 text-[#2ea043]" />
-              <h2 className="text-base font-semibold text-foreground">
-                {format(currentMonth, 'MMMM yyyy')}
-              </h2>
+        <div className={cn(
+          "grid grid-cols-7 gap-1 mb-1",
+          isSidebar ? "text-[10px]" : "text-xs"
+        )}>
+          {(isSidebar ? ['S', 'M', 'T', 'W', 'T', 'F', 'S'] : ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']).map(day => (
+            <div key={day} className="text-center text-muted-foreground font-medium">
+              {day}
             </div>
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 hover:bg-[#216e39]/10"
-                onClick={prevMonth}
-                disabled={!canGoPrev}
+          ))}
+        </div>
+
+        <div className="grid grid-cols-7 gap-1">
+          {days.map((day) => {
+            const activityLevel = getActivityLevel(day);
+            const isCurrentMonth = isSameMonth(day, currentMonth);
+            const isExamDay = isSameDay(day, examDate);
+            const isFutureDay = isAfter(day, examDate);
+            
+            return (
+              <div
+                key={day.toString()}
+                className={cn(
+                  "aspect-square flex items-center justify-center relative",
+                  isSidebar ? "text-[10px]" : "text-xs",
+                  !isCurrentMonth && "text-muted-foreground/50",
+                  isExamDay && "bg-red-500/20 rounded-full font-bold text-red-600 dark:text-red-400",
+                  !isExamDay && !isFutureDay && getActivityColor(activityLevel),
+                  "rounded-full",
+                  isToday(day) && "ring-1 ring-[#2ea043] ring-offset-1 ring-offset-background",
+                  isFutureDay && "text-muted-foreground/30"
+                )}
               >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-7 w-7 hover:bg-[#216e39]/10"
-                onClick={nextMonth}
-                disabled={!canGoNext}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
+                <span className={cn(
+                  "z-10 relative",
+                  isExamDay && "text-red-600 dark:text-red-400 font-bold",
+                  activityLevel > 1 && !isFutureDay && "text-white"
+                )}>
+                  {format(day, 'd')}
+                </span>
+                {isExamDay && (
+                  <span className="absolute inset-0 animate-ping bg-red-500/20 rounded-full" />
+                )}
+              </div>
+            );
+          })}
+        </div>
 
-          <div className="grid grid-cols-7 gap-1 text-xs mb-1">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-              <div key={day} className="text-center text-muted-foreground font-medium py-0.5">
-                {day}
-              </div>
-            ))}
-          </div>
-
-          <div className="grid grid-cols-7 gap-1">
-            {days.map((day) => {
-              const activityLevel = getActivityLevel(day);
-              const isCurrentMonth = isSameMonth(day, currentMonth);
-              const isExamDay = isSameDay(day, examDate);
-              const isFutureDay = isAfter(day, examDate);
-              
-              return (
-                <div
-                  key={day.toString()}
-                  className={cn(
-                    "aspect-square flex items-center justify-center text-xs relative",
-                    !isCurrentMonth && "text-muted-foreground/50",
-                    isExamDay && "bg-red-500/20 rounded-full font-bold text-red-600 dark:text-red-400",
-                    !isExamDay && !isFutureDay && getActivityColor(activityLevel),
-                    "hover:bg-[#216e39]/10 transition-colors rounded-full",
-                    isToday(day) && "ring-1 ring-[#2ea043] ring-offset-1 ring-offset-background",
-                    isFutureDay && "text-muted-foreground/30"
-                  )}
-                >
-                  <span className={cn(
-                    "z-10 relative",
-                    isExamDay && "text-red-600 dark:text-red-400 font-bold",
-                    activityLevel > 1 && !isFutureDay && "text-white"
-                  )}>
-                    {format(day, 'd')}
-                  </span>
-                  {isExamDay && (
-                    <span className="absolute inset-0 animate-ping bg-red-500/20 rounded-full" />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Legend */}
-          <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground border-t pt-3">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-[#40c463]/40 rounded-full" />
-                <span>Light</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-[#2ea043] rounded-full" />
-                <span>Medium</span>
-              </div>
-              <div className="flex items-center gap-1">
-                <div className="w-2 h-2 bg-[#216e39] rounded-full" />
-                <span>Heavy</span>
-              </div>
+        {/* Legend */}
+        <div className={cn(
+          "flex items-center justify-between text-muted-foreground border-t",
+          isSidebar ? "mt-2 pt-2 text-[10px]" : "mt-4 pt-3 text-xs"
+        )}>
+          <div className={cn(
+            "flex items-center",
+            isSidebar ? "gap-2" : "gap-3"
+          )}>
+            <div className="flex items-center gap-1">
+              <div className={cn(
+                "bg-[#40c463]/40 rounded-full",
+                isSidebar ? "w-1.5 h-1.5" : "w-2 h-2"
+              )} />
+              <span>{isSidebar ? "Light" : "Light Activity"}</span>
             </div>
             <div className="flex items-center gap-1">
-              <div className="w-2 h-2 bg-red-500/20 rounded-full" />
-              <span className="text-red-600 dark:text-red-400 font-medium">Exam Day</span>
+              <div className={cn(
+                "bg-[#2ea043] rounded-full",
+                isSidebar ? "w-1.5 h-1.5" : "w-2 h-2"
+              )} />
+              <span>{isSidebar ? "Med" : "Medium"}</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className={cn(
+                "bg-[#216e39] rounded-full",
+                isSidebar ? "w-1.5 h-1.5" : "w-2 h-2"
+              )} />
+              <span>{isSidebar ? "High" : "Heavy"}</span>
             </div>
           </div>
+          <div className="flex items-center gap-1">
+            <div className={cn(
+              "bg-red-500/20 rounded-full",
+              isSidebar ? "w-1.5 h-1.5" : "w-2 h-2"
+            )} />
+            <span className="text-red-600 dark:text-red-400 font-medium">
+              {isSidebar ? "Exam" : "Exam Day"}
+            </span>
+          </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
+
+  if (variant === 'dashboard') {
+    return (
+      <Card className="bg-background">
+        <CardContent className="p-0">
+          {content}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return content;
 } 

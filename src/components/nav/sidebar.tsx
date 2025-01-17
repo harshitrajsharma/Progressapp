@@ -13,17 +13,39 @@ import {
   BookOpen,
   LogOut,
   Menu,
+  Calendar,
 } from "lucide-react";
+import { ExamCountdown } from "@/components/dashboard/exam-countdown";
 
 interface SidebarProps {
   isCollapsed: boolean;
+  examDate?: Date;
+  dailyActivities?: Array<{
+    date: Date;
+    studyTime: number;
+  }>;
 }
 
-export function Sidebar({ isCollapsed }: SidebarProps) {
+function CollapsedExamCountdown({ daysLeft }: { daysLeft: number }) {
+  return (
+    <div className="flex items-center justify-center py-4">
+      <div className="relative">
+        <Calendar className="h-6 w-6 text-blue-500" />
+        <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center">
+          <span className="text-white text-xs font-bold">{daysLeft - 1}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: SidebarProps) {
   const pathname = usePathname();
+  const isOnDashboard = pathname === "/dashboard";
 
   return (
-    <div className="flex h-full flex-col gap-4 p-4">
+    <div className="flex h-full flex-col p-4">
+      {/* Header */}
       <div className="flex h-[60px] items-center px-2">
         <Link 
           href="/dashboard" 
@@ -54,42 +76,62 @@ export function Sidebar({ isCollapsed }: SidebarProps) {
         </Button>
       </div>
 
-      <div className="flex flex-1 flex-col gap-2">
-        <Link href="/dashboard">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname?.startsWith("/dashboard") && "bg-secondary"
-            )}
-          >
-            <BarChart3 className="h-5 w-5 text-blue-500" />
-            {!isCollapsed && <span>Dashboard</span>}
-          </Button>
-        </Link>
-        <Link href="/subjects">
-          <Button
-            variant="ghost"
-            className={cn(
-              "w-full justify-start gap-2",
-              pathname?.startsWith("/subjects") && "bg-secondary"
-            )}
-          >
-            <BookOpen className="h-5 w-5 text-green-500" />
-            {!isCollapsed && <span>Subjects</span>}
-          </Button>
-        </Link>
-      </div>
+      <div className="flex flex-col flex-1 justify-between mt-4">
+        {/* Top Navigation Links */}
+        <div className="flex flex-col gap-2">
+          <Link href="/dashboard">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                pathname?.startsWith("/dashboard") && "bg-secondary"
+              )}
+            >
+              <BarChart3 className="h-5 w-5 text-blue-500" />
+              {!isCollapsed && <span>Dashboard</span>}
+            </Button>
+          </Link>
+          <Link href="/subjects">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                pathname?.startsWith("/subjects") && "bg-secondary"
+              )}
+            >
+              <BookOpen className="h-5 w-5 text-green-500" />
+              {!isCollapsed && <span>Subjects</span>}
+            </Button>
+          </Link>
+        </div>
 
-      <div className="flex flex-col gap-2">
-        <Button
-          variant="ghost"
-          className="w-full justify-start gap-2 hover:bg-destructive/10 hover:text-destructive"
-          onClick={() => signOut()}
-        >
-          <LogOut className="h-5 w-5 text-red-500" />
-          {!isCollapsed && <span>Log out</span>}
-        </Button>
+        {/* Centered Exam Countdown */}
+        {examDate && !isOnDashboard && (
+          <div className={cn(
+            "my-4 border-t border-b py-2",
+            isCollapsed ? "" : ""
+          )}>
+            {isCollapsed ? (
+              <CollapsedExamCountdown daysLeft={Math.ceil((new Date(examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} />
+            ) : (
+              <div className="px-2">
+                <ExamCountdown variant="sidebar" examDate={new Date(examDate)} dailyActivities={dailyActivities} />
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Bottom Logout Button */}
+        <div className="flex flex-col gap-2">
+          <Button
+            variant="ghost"
+            className="w-full justify-start gap-2 hover:bg-destructive/10 hover:text-destructive"
+            onClick={() => signOut()}
+          >
+            <LogOut className="h-5 w-5 text-red-500" />
+            {!isCollapsed && <span>Log out</span>}
+          </Button>
+        </div>
       </div>
     </div>
   );
