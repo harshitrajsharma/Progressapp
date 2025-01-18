@@ -13,6 +13,7 @@ import { calculateExamFoundation } from "@/lib/calculations/exam-foundation";
 
 interface DashboardContentProps {
     user: {
+        name: string;
         examName: string;
         examDate: Date;
         subjects: SubjectWithRelations[];
@@ -27,21 +28,23 @@ export function DashboardContent({ user }: DashboardContentProps) {
     const progress = calculateDashboardProgress(user.subjects);
     const foundationResult = calculateExamFoundation(user.subjects);
 
+    const welcomeHeader = (
+        <div className="mb-6">
+            <h1 className="text-3xl font-bold text-blue-500">Welcome {user?.name?.split(" ")[0]}</h1>
+            <p className="text-muted-foreground">
+                Here&apos;s an overview of your {user.examName} preparation
+            </p>
+        </div>
+    );
+
     return (
         <div className="md:p-8 space-y-6">
-
-
             {/* Main Content */}
             <div className="grid gap-6 grid-cols-1 lg:grid-cols-[1.3fr_0.7fr]">
                 {/* Right Column - Progress Overview & Exam Countdown (For Mobile) */}
                 <div className="lg:hidden">
                     {/* Header */}
-                    <div className="mb-6">
-                        <h1 className="text-3xl font-bold">Welcome back!</h1>
-                        <p className="text-muted-foreground">
-                            Here&apos;s an overview of your {user.examName} preparation
-                        </p>
-                    </div>
+                    {welcomeHeader}
                     <div className="space-y-6">
                         <ExamCountdown
                             examDate={user.examDate}
@@ -56,12 +59,9 @@ export function DashboardContent({ user }: DashboardContentProps) {
 
                 {/* Left Column - Header, Strategy & Timer */}
                 <div>
-                    {/* Header */}
+                    {/* Header - Desktop */}
                     <div className="mb-6 hidden md:block">
-                        <h1 className="text-3xl font-bold">Welcome back!</h1>
-                        <p className="text-muted-foreground">
-                            Here&apos;s an overview of your {user.examName} preparation
-                        </p>
+                        {welcomeHeader}
                     </div>
 
                     <div className="space-y-6">

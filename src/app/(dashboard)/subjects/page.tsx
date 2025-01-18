@@ -258,7 +258,7 @@ export default function SubjectsPage() {
       )}
 
       {/* Rest of the page content */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center gap-4 justify-between">
         <SearchSubjects />
         <AddSubjectButton />
       </div>

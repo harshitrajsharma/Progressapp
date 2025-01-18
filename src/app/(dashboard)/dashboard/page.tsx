@@ -10,10 +10,14 @@ import { User, MockTest, DailyActivity, StudyStreak } from "@prisma/client";
 import { SubjectWithRelations } from "@/lib/calculations/types";
 
 interface DashboardUser extends User {
+  name: string | null;
   mockTests: MockTest[];
   studyStreak: StudyStreak | null;
   subjects: SubjectWithRelations[];
   dailyActivities: DailyActivity[];
+  examName: string;
+  examDate: Date;
+  targetMarks: number;
 }
 
 async function getDashboardData(email: string): Promise<DashboardUser | null> {
@@ -45,7 +49,7 @@ async function getDashboardData(email: string): Promise<DashboardUser | null> {
           },
           take: 30 // Last 30 days
         }
-      },
+      }
     }) as DashboardUser | null;
     return user;
   });
@@ -53,21 +57,24 @@ async function getDashboardData(email: string): Promise<DashboardUser | null> {
 
 export default async function DashboardPage() {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) redirect("/auth/signin");
+
+  if (!session?.user?.email) {
+    redirect('/auth/signin');
+  }
 
   const user = await getDashboardData(session.user.email);
-  if (!user?.examName || !user.examDate) redirect("/onboarding");
+
+  if (!user) {
+    redirect('/auth/signin');
+  }
 
   return (
     <Suspense fallback={<Loading />}>
       <DashboardContent 
         user={{
-          examName: user.examName,
-          examDate: user.examDate,
-          subjects: user.subjects,
-          mockTests: user.mockTests,
-          studyStreak: user.studyStreak,
-          dailyActivities: user.dailyActivities,
+          
+          ...user,
+          name: user.name || 'there',
           targetMarks: user.targetMarks || 0
         }} 
       />

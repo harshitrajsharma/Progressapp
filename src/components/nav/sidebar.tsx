@@ -44,9 +44,9 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
   const isOnDashboard = pathname === "/dashboard";
 
   return (
-    <div className="flex h-full flex-col p-4">
+    <div className="flex h-full flex-col">
       {/* Header */}
-      <div className="flex h-[60px] items-center px-2">
+      <div className="flex h-[60px] border-b items-center p-4">
         <Link
           href="/dashboard"
           className={cn(
@@ -55,7 +55,7 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
           )}
         >
           <GraduationCap className="h-7 w-7 text-blue-500" />
-          {!isCollapsed && <span>Progress</span>}
+          {!isCollapsed && <span>Progress Tracking</span>}
         </Link>
         <Button
           variant="ghost"
@@ -76,7 +76,7 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
         </Button>
       </div>
 
-      <div className="flex flex-col flex-1 justify-between mt-4">
+      <div className="flex flex-col flex-1 p-4 justify-between">
         {/* Top Navigation Links */}
         <div className="flex flex-col gap-2">
           <Link href="/dashboard">
