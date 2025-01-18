@@ -31,7 +31,7 @@ function CollapsedExamCountdown({ daysLeft }: { daysLeft: number }) {
     <div className="flex items-center justify-center py-4">
       <div className="relative">
         <Calendar className="h-6 w-6 text-blue-500" />
-        <div className="absolute -top-2 -right-2 bg-blue-500 rounded-full w-5 h-5 flex items-center justify-center">
+        <div className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center">
           <span className="text-white text-xs font-bold">{daysLeft - 1}</span>
         </div>
       </div>
@@ -47,8 +47,8 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
     <div className="flex h-full flex-col p-4">
       {/* Header */}
       <div className="flex h-[60px] items-center px-2">
-        <Link 
-          href="/dashboard" 
+        <Link
+          href="/dashboard"
           className={cn(
             "flex items-center gap-2 font-semibold",
             isCollapsed ? "justify-center" : "flex-1"
@@ -103,23 +103,24 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
               {!isCollapsed && <span>Subjects</span>}
             </Button>
           </Link>
+          {/* Exam Countdown */}
+          {examDate && !isOnDashboard && (
+            <div className={cn(
+              "my-4 border-t border-b py-2",
+              isCollapsed ? "" : ""
+            )}>
+              {isCollapsed ? (
+                <CollapsedExamCountdown daysLeft={Math.ceil((new Date(examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} />
+              ) : (
+                <div className="px-2">
+                  <ExamCountdown variant="sidebar" examDate={new Date(examDate)} dailyActivities={dailyActivities} />
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* Centered Exam Countdown */}
-        {examDate && !isOnDashboard && (
-          <div className={cn(
-            "my-4 border-t border-b py-2",
-            isCollapsed ? "" : ""
-          )}>
-            {isCollapsed ? (
-              <CollapsedExamCountdown daysLeft={Math.ceil((new Date(examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} />
-            ) : (
-              <div className="px-2">
-                <ExamCountdown variant="sidebar" examDate={new Date(examDate)} dailyActivities={dailyActivities} />
-              </div>
-            )}
-          </div>
-        )}
+
 
         {/* Bottom Logout Button */}
         <div className="flex flex-col gap-2">
