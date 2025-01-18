@@ -12,8 +12,8 @@ export default function LandingPage() {
     <main className="min-h-screen">
       <LandingNavbar />
       <HeroSection />
-      <FeatureSection />
       <FeaturesCard />
+      <FeatureSection />
       {/* <TestimonialSection /> */}
       <PricingSection />
       <CTASection />

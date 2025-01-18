@@ -25,54 +25,54 @@ interface Feature {
 const features: Feature[] = [
   {
     icon: Brain,
-    title: "Foundation Level",
+    title: "Foundation Level System",
     description:
-      "Master core concepts with our structured foundation level system. Perfect for building strong basics.",
+      "Track your learning journey through 10 progressive levels, from beginner to expert, with personalized insights at each stage.",
     color: "from-purple-600 to-indigo-600",
     hoverColor: "group-hover:from-purple-700 group-hover:to-indigo-700",
     delay: 0.2,
   },
   {
-    icon: Target,
-    title: "Smart Goals",
+    icon: BarChart3,
+    title: "Smart Progress Analytics",
     description:
-      "Set and track personalized learning goals with our SMART goal-setting framework.",
+      "Monitor your progress across learning, revision, practice, and test phases with detailed analytics and performance metrics.",
     color: "from-blue-600 to-cyan-600",
     hoverColor: "group-hover:from-blue-700 group-hover:to-cyan-700",
     delay: 0.3,
   },
   {
-    icon: BarChart3,
-    title: "Progress Analytics",
+    icon: Target,
+    title: "Topic Weightage Analysis",
     description:
-      "Track your learning journey with detailed progress bars and performance metrics.",
+      "Visualize topic importance vs. your performance to optimize your study strategy and focus on high-impact areas.",
     color: "from-cyan-600 to-teal-600",
     hoverColor: "group-hover:from-cyan-700 group-hover:to-teal-700",
     delay: 0.4,
   },
   {
     icon: BookOpen,
-    title: "Study Resources",
+    title: "Subject Management",
     description:
-      "Access curated study materials and resources tailored to your foundation level.",
+      "Organize subjects with drag-and-drop functionality, track completion status, and manage chapters and topics efficiently.",
     color: "from-teal-600 to-green-600",
     hoverColor: "group-hover:from-teal-700 group-hover:to-green-700",
     delay: 0.5,
   },
   {
     icon: Clock,
-    title: "Time Management",
+    title: "Exam Countdown",
     description:
-      "Plan your study sessions effectively with our integrated time tracking tools.",
+      "Stay on track with a dynamic countdown timer, daily activity tracking, and exam date reminders.",
     color: "from-green-600 to-emerald-600",
     hoverColor: "group-hover:from-green-700 group-hover:to-emerald-700",
     delay: 0.6,
   },
   {
     icon: Layers,
-    title: "Topic Mastery",
+    title: "Expected Marks Projection",
     description:
-      "Break down complex subjects into manageable topics and track mastery levels.",
+      "Get insights into your potential exam performance based on your current progress and subject weightage.",
     color: "from-emerald-600 to-blue-600",
     hoverColor: "group-hover:from-emerald-700 group-hover:to-blue-700",
     delay: 0.7,
