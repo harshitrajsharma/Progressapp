@@ -121,6 +121,26 @@ function FeaturesCard() {
           <SmartRecommendations subjects={subjects} />
         </div>
 
+        <div className="text-center text-black dark:text-white max-w-3xl mx-auto mb-16 space-y-4">
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold tracking-tight"
+          >
+            Analyze each Subject {" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500">
+              on Key Areas
+            </span>
+          </h2>
+          <p className="text-base sm:text-lg text-muted-foreground"
+          >
+            To master each subject <br />
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-blue-500 to-indigo-500">
+              Learning should be done 1 time,
+              Revision 3 times,
+              Practice 3 times,
+              Tests 3 times,
+            </span>
+          </p>
+        </div>
+
         {demoSubject && (
           <Card className="p-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -135,7 +155,7 @@ function FeaturesCard() {
               {/* Right side - Chapters */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Chapter Categories */}
-                <div className="flex justify-center mb-4">
+                <div className="flex justify-start mb-4">
                   <ChapterCategories
                     selectedCategory={selectedCategory}
                     onCategoryChange={setSelectedCategory}
@@ -163,7 +183,7 @@ function FeaturesCard() {
           </Card>
         )}
       </div>
-    </div>
+    </div >
   );
 }
 

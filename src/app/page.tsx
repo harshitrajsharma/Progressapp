@@ -5,7 +5,6 @@ import HeroSection from "@/components/landing/hero-section";
 import { LandingNavbar } from "@/components/landing/landing-navbar";
 import { PricingSection } from "@/components/landing/pricing-section";
 import FeaturesCard from "@/components/landing/FeaturesCard";
-// import { TestimonialSection } from "@/components/landing/testimonial-section";
 
 export default function LandingPage() {
   return (
@@ -14,7 +13,6 @@ export default function LandingPage() {
       <HeroSection />
       <FeaturesCard />
       <FeatureSection />
-      {/* <TestimonialSection /> */}
       <PricingSection />
       <CTASection />
     </main>

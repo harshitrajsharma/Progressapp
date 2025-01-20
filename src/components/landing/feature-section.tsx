@@ -129,7 +129,7 @@ export function FeatureSection() {
   });
 
   return (
-    <section className="relative py-20 overflow-hidden">
+    <section id="features" className="relative py-20 overflow-hidden">
       {/* Background gradient effects */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 dark:bg-black/90" />
