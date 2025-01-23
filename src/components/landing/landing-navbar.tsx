@@ -68,8 +68,8 @@ export function LandingNavbar() {
 
           {/* Right Side */}
           <div className="flex items-center space-x-4">
-            <div className="group bg-background/50 backdrop-blur-sm p-2 rounded-full border border-border/50 hover:bg-background/80 transition-all">
-              <div className="p-1 rounded-full transition-all group-hover:bg-primary/10">
+            <div className="group bg-background/50 backdrop-blur-sm p-2 rounded-xl border border-border/50 hover:bg-background/80 transition-all">
+              <div>
                 <ThemeToggle />
               </div>
             </div>

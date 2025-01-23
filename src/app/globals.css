@@ -125,7 +125,7 @@ body {
 }
 
 .animate-gradient {
-  animation: gradient 3s ease infinite;
+  animation: gradient 10s ease infinite;
 }
 
 .bg-300\% {

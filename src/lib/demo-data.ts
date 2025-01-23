@@ -95,10 +95,10 @@ const physicsChapters: ChapterWithRelations[] = [
     name: "Mechanics",
     important: true,
     overallProgress: 80,
-    learningProgress: 90,
-    revisionProgress: 70,
-    practiceProgress: 50,
-    testProgress: 40,
+    learningProgress: 67,
+    revisionProgress: 44,
+    practiceProgress: 33,
+    testProgress: 11,
     position: 0,
     subjectId: "1",
     createdAt: new Date(),
@@ -122,7 +122,7 @@ const physicsChapters: ChapterWithRelations[] = [
       },
       {
         id: "2",
-        name: "Work and Energy",
+        name: "Motion in Straight line",
         important: true,
         learningStatus: true,
         revisionCount: 1,
@@ -134,7 +134,22 @@ const physicsChapters: ChapterWithRelations[] = [
         nextRevision: new Date(),
         createdAt: new Date(),
         updatedAt: new Date()
-      }
+      },
+      {
+        id: "3",
+        name: "Work, Energy and Power",
+        important: false,
+        learningStatus: false,
+        revisionCount: 1,
+        practiceCount: 1,
+        testCount: 0,
+        chapterId: "1",
+        position: 2,
+        lastRevised: new Date(),
+        nextRevision: new Date(),
+        createdAt: new Date(),
+        updatedAt: new Date()
+      },
     ]
   }
 ];

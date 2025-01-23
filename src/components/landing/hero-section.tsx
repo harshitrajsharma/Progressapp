@@ -4,10 +4,12 @@ import React from "react";
 import Link from "next/link";
 import { ExamFoundationCard } from "@/components/dashboard/exam-foundation-card";
 import { dummyExamFoundation } from "@/lib/demo-data";
+import { Button } from "@/components/ui/button";
+import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
   return (
-    <div className="relative min-h-[900px] bg-gradient-to-b from-background via-background/95 to-background/90">
+    <div className="relative min-h-screen bg-gradient-to-b from-background via-background/95 to-background/90">
       {/* Gradient Orbs */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -left-1/4 top-1/4 w-1/2 h-1/2 bg-primary/20 rounded-full blur-[120px]" />
@@ -26,7 +28,7 @@ export default function HeroSection() {
 
       {/* Content */}
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex min-h-[900px] flex-col items-center justify-center gap-16 py-40 md:py-12 lg:flex-row lg:justify-between lg:py-0">
+        <div className="flex min-h-screen flex-col items-center justify-center gap-16 py-40 md:py-12 lg:flex-row lg:justify-between lg:py-0">
           {/* Left side */}
           <div className="flex flex-col items-center text-center lg:items-start lg:text-left lg:w-1/2">
             <div className="p-2 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/50 mb-8">
@@ -41,6 +43,10 @@ export default function HeroSection() {
             
             <p className="mt-6 text-lg text-muted-foreground backdrop-blur-sm">
               Track your progress, identify strengths and weaknesses, and get personalized recommendations to improve your exam preparation.
+            </p>
+
+            <p className="mt-6 text-lg text-muted-foreground backdrop-blur-sm">
+              <b>NOTE:</b> Just a CRUD app with calculation logic based on user's progress data. <br />
             </p>
             
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-6">
