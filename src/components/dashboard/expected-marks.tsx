@@ -23,20 +23,10 @@ export function ExpectedMarks({ subjects, targetMarks }: ExpectedMarksProps) {
   }, { expectedMarks: 0, totalWeightage: 0 });
 
   return (
-    <Card className="border relative p-3 sm:p-6">
+    <Card className="border relative w-full max-h-48 p-4">
       <div className="flex items-center justify-between mb-1.5 sm:mb-2">
         <div className="flex items-center gap-1 sm:gap-2">
           <h2 className="text-sm sm:text-lg font-semibold">Projected Marks</h2>
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger>
-                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
-              </TooltipTrigger>
-              <TooltipContent>
-                <p>Projected Marks based on your test performance across all subjects</p>
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
         </div>
       </div>
 
@@ -50,8 +40,21 @@ export function ExpectedMarks({ subjects, targetMarks }: ExpectedMarksProps) {
         <span className="ml-1 md:hidden sm:ml-2 text-md text-muted-foreground">marks Projected</span>
       </div>
 
+      <div className=" absolute top-4 right-4">
+      <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <Info className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Projected Marks based on your test performance across all subjects</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+      </div>
+
       {/* Target Badge */}
-      <div className="absolute bottom-2 right-3 sm:top-4 sm:right-4">
+      <div className="absolute bottom-2 right-3 sm:bottom-4 sm:right-4">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger>

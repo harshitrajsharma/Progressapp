@@ -18,11 +18,14 @@ export function SubjectCount({ subjects }: SubjectCountProps) {
   }).length;
 
   return (
-    <Card className="border relative p-3 sm:p-6">
+    <Card className=" border relative w-full p-4">
       <div className="flex items-center justify-between mb-1.5 sm:mb-2">
         <div className="flex items-center gap-1 sm:gap-2">
           <h2 className="text-sm sm:text-lg font-semibold">Subject Progress</h2>
-          <TooltipProvider>
+        </div>
+      </div>
+      <div className=" absolute top-3 right-3">
+      <TooltipProvider>
             <Tooltip>
               <TooltipTrigger>
                 <Info className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
@@ -32,7 +35,6 @@ export function SubjectCount({ subjects }: SubjectCountProps) {
               </TooltipContent>
             </Tooltip>
           </TooltipProvider>
-        </div>
       </div>
 
       <div className="flex flex-col md:flex-row items-baseline gap-1">

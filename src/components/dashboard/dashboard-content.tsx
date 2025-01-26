@@ -67,7 +67,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
                     <div className="space-y-6">
                         <div className="flex flex-col-reverse gap-6 lg:flex-row ">
                             {/* Foundation Level Card */}
-                            <div className=" lg:w-[65%]">
+                            <div className=" lg:w-[70%]">
                                 <ExamFoundationCard
                                     key={JSON.stringify(foundationResult)}
                                     result={foundationResult}
@@ -75,7 +75,7 @@ export function DashboardContent({ user }: DashboardContentProps) {
                                 />
                             </div>
                             {/* Stats Grid */}
-                            <div className=" lg:w-[35%] grid grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 gap-4">
+                            <div className=" lg:w-[30%] grid grid-cols-2 lg:grid-cols-1 lg:grid-rows-4 gap-4">
                                 <SubjectCount subjects={user.subjects} />
                                 <ExpectedMarks subjects={user.subjects} targetMarks={user.targetMarks} />
                             </div>
