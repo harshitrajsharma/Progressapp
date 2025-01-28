@@ -135,9 +135,9 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
   } as const;
 
   const categoryBg = {
-    'not-started': 'hover:bg-red-500/5 bg-red-500/[0.03]',
-    'in-progress': 'hover:bg-blue-500/5 bg-blue-500/[0.03]',
-    'completed': 'hover:bg-green-500/5 bg-green-500/[0.03]'
+    'not-started': 'hover:bg-red-500/10 bg-red-500/[0.03]',
+    'in-progress': 'hover:bg-blue-500/10 bg-blue-500/[0.03]',
+    'completed': 'hover:bg-green-500/10 bg-green-500/[0.03]'
   } as const;
 
   return (
@@ -147,7 +147,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
       {...attributes}
       {...listeners}
       className={cn(
-        "group relative",
+        "group relative hover:scale-105 transition-all duration-1000 ",
         isDragging && "ring-2 ring-primary shadow-lg cursor-grabbing",
         !isDragging && "cursor-grab"
       )}
