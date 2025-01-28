@@ -131,3 +131,16 @@ body {
 .bg-300\% {
   background-size: 300% 300%;
 }
+
+@keyframes progress {
+  from {
+    width: 0%;
+  }
+  to {
+    width: 100%;
+  }
+}
+
+.animate-progress {
+  animation: progress 10s linear infinite;
+}

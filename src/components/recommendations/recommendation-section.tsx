@@ -1,5 +1,6 @@
 "use client";
 
+import React from 'react';
 import { Card } from "@/components/ui/card";
 import { Info } from "lucide-react";
 import {
@@ -10,18 +11,13 @@ import {
 } from "@/components/ui/tooltip";
 
 interface RecommendationSectionProps {
-  title: string;
+  title: React.ReactNode;
   description: string;
   children: React.ReactNode;
   className?: string;
 }
 
-export function RecommendationSection({
-  title,
-  description,
-  children,
-  className = ""
-}: RecommendationSectionProps) {
+const RecommendationSection: React.FC<RecommendationSectionProps> = ({ title, description, children, className = "" }) => {
   return (
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between gap-1.5 mb-3">
@@ -42,4 +38,6 @@ export function RecommendationSection({
       </div>
     </Card>
   );
-} 
+};
+
+export default RecommendationSection; 

@@ -16,7 +16,7 @@ interface SubjectCardProps {
   behindTarget?: number;
   href?: string;
   className?: string;
-  variant?: 'emerald' | 'blue' | 'amber';
+  variant?: string;
 }
 
 export function SubjectCard({
