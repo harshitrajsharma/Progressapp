@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/components/nav/header";
-import { Sidebar, MobileSidebar } from "@/components/nav/sidebar";
+import { Sidebar } from "@/components/nav/sidebar";
 import { MobileBottomNavbar } from "@/components/nav/mobile-bottom-navbar";
 import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
@@ -78,13 +78,7 @@ export default function DashboardLayout({
         />
       </aside>
       <div className="flex-1 flex flex-col h-screen overflow-auto">
-        <Header>
-          <MobileSidebar 
-            examDate={userData?.examDate || new Date()}
-            dailyActivities={userData?.dailyActivities || []}
-            subjects={userData?.subjects || []}
-          />
-        </Header>
+        <Header/>
         <main className="flex-1 p-8 pb-20 md:pb-8">
           {children}
         </main>

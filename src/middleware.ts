@@ -2,9 +2,19 @@ import { withAuth } from "next-auth/middleware";
 import { NextResponse } from "next/server";
 
 export default withAuth(
-  function middleware(req) {
+  async function middleware(req) {
     // If it's the landing page and user is authenticated, redirect to dashboard
     if (req.nextUrl.pathname === "/" && req.nextauth.token) {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Check if user needs onboarding
+    if (req.nextUrl.pathname !== "/onboarding" && req.nextauth.token?.needsOnboarding) {
+      return NextResponse.redirect(new URL("/onboarding", req.url));
+    }
+
+    // Prevent accessing onboarding if already completed
+    if (req.nextUrl.pathname === "/onboarding" && req.nextauth.token && !req.nextauth.token.needsOnboarding) {
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 

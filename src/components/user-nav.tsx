@@ -12,12 +12,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { LogOut } from "lucide-react"
+import { LogOut, Settings, User } from "lucide-react"
 // import { LogOut, Settings, User } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
+import { useRouter } from 'next/navigation'
 
 export function UserNav() {
   const { data: session } = useSession()
+  const router = useRouter()
 
   if (!session?.user) return null
 
@@ -52,14 +54,14 @@ export function UserNav() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
-            {/* <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/account')}>
               <User className="mr-2 h-4 w-4" />
               <span>Profile</span>
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push('/account')}>
               <Settings className="mr-2 h-4 w-4" />
               <span>Settings</span>
-            </DropdownMenuItem> */}
+            </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem
