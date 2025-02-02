@@ -63,13 +63,15 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
       icon: "🔄",
       description: "Subjects that need revision based on your learning progress",
       className: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40",
+      emptyMessage: "Great job! You're up to date with your revisions. 🎉",
       subjects: reviseSubjects.map(({ subject, revisionProgress }) => ({
         subject,
         progress: revisionProgress,
         variant: "emerald",
         status: "Revise Now",
         statusColor: "text-emerald-500",
-        cardClassName: "bg-white/80 dark:bg-emerald-900/60 hover:bg-emerald-50/90 dark:hover:bg-emerald-800/80"
+        cardClassName: "bg-white/80 dark:bg-emerald-900/60 hover:bg-emerald-50/90 dark:hover:bg-emerald-800/80",
+        behindTarget: undefined
       }))
     },
     {
@@ -77,6 +79,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
       icon: "🎯",
       description: "Subjects that need immediate attention based on learning progress",
       className: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40",
+      emptyMessage: "Excellent! You're on track with all your subjects. 🌟",
       subjects: priorityFocusSubjects.map(({ subject, learningProgress }, index) => ({
         subject,
         progress: learningProgress,
@@ -95,13 +98,15 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
       icon: "🚀",
       description: `Recommended subjects to start based on ${session?.user?.examName || "exam"} weightage`,
       className: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40",
+      emptyMessage: "Congratulations! You've started all your subjects. 🎯",
       subjects: startNextSubjects.map(({ subject }) => ({
         subject,
         progress: 0,
         variant: "amber",
         status: "High priority - Start soon",
         statusColor: "text-orange-500",
-        cardClassName: "bg-white/80 dark:bg-amber-900/60 hover:bg-amber-50/90 dark:hover:bg-amber-800/80"
+        cardClassName: "bg-white/80 dark:bg-amber-900/60 hover:bg-amber-50/90 dark:hover:bg-amber-800/80",
+        behindTarget: undefined
       }))
     }
   ];
@@ -186,6 +191,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                 section.className,
                 "transition-transform hover:scale-[1.01] border border-white/20"
               )}
+              emptyMessage={section.emptyMessage}
+              isEmpty={section.subjects.length === 0}
             >
               <div className="space-y-4">
                 {section.subjects.map((subjectData) => (
@@ -217,7 +224,6 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-
             <div>
               <div className="transition-opacity duration-300">
                 <RecommendationSection
@@ -232,6 +238,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                     sections[activeSection].className,
                     "border border-white/20"
                   )}
+                  emptyMessage={sections[activeSection].emptyMessage}
+                  isEmpty={sections[activeSection].subjects.length === 0}
                 >
                   {sections[activeSection].subjects.map((subjectData) => (
                     <SubjectCard

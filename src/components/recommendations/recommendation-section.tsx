@@ -15,9 +15,18 @@ interface RecommendationSectionProps {
   description: string;
   children: React.ReactNode;
   className?: string;
+  emptyMessage?: string;
+  isEmpty?: boolean;
 }
 
-const RecommendationSection: React.FC<RecommendationSectionProps> = ({ title, description, children, className = "" }) => {
+const RecommendationSection: React.FC<RecommendationSectionProps> = ({ 
+  title, 
+  description, 
+  children, 
+  className = "",
+  emptyMessage,
+  isEmpty = false
+}) => {
   return (
     <Card className={`p-3 ${className}`}>
       <div className="flex items-center justify-between gap-1.5 mb-3">
@@ -34,7 +43,11 @@ const RecommendationSection: React.FC<RecommendationSectionProps> = ({ title, de
         </TooltipProvider>
       </div>
       <div className="space-y-3">
-        {children}
+        {isEmpty ? (
+          <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-2">
+            <p className="text-muted-foreground text-sm font-medium">{emptyMessage}</p>
+          </div>
+        ) : children}
       </div>
     </Card>
   );

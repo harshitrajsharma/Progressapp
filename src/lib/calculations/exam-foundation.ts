@@ -1,4 +1,3 @@
-import { Subject, MockTest } from "@prisma/client";
 import { ExamFoundationLevel, ExamFoundationResult } from "./types";
 import { calculateSubjectProgress } from "./progress";
 import { SubjectWithRelations } from "./types";

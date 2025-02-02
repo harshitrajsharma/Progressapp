@@ -25,6 +25,18 @@ export async function GET() {
               date: 'desc'
             },
             take: 30 // Last 30 days
+          },
+          subjects: {
+            include: {
+              tests: true,
+              mockTests: true,
+              chapters: {
+                include: {
+                  topics: true,
+                  subject: true
+                }
+              }
+            }
           }
         }
       });

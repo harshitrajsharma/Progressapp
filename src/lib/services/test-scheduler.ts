@@ -1,4 +1,4 @@
-import { TestType, TestConfig, TestSchedule, TestScheduleConfig } from '@/types/gate-preparation';
+import { TestType, TestSchedule, TestScheduleConfig } from '@/types/gate-preparation';
 import { Subject, SubjectProgress } from '@prisma/client';
 
 export class TestScheduler {
@@ -84,7 +84,7 @@ export class TestScheduler {
   private generateTWTs(subject: Subject): TestSchedule[] {
     const tests: TestSchedule[] = [];
     const config = this.TEST_CONFIG.topicWiseTests;
-    let scheduleDate = new Date();
+    const scheduleDate = new Date();
 
     // Generate TWTs for each chapter
     subject.chapters.forEach((chapter, index) => {

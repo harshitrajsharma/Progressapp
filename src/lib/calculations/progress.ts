@@ -1,4 +1,4 @@
-import { Topic, Chapter, Subject } from "@prisma/client"
+import { Topic } from "@prisma/client"
 import { 
   TopicProgress, 
   ChapterProgress, 

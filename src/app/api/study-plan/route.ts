@@ -6,7 +6,7 @@
 // import { GATEPreparationEngine } from '@/lib/algorithms/GATEPreparationEngine';
 // import { Topic, StudyProgress, PreparationConfig } from '@/types/gate-preparation';
 
-export async function POST(req: Request) {
+export async function POST() {
     return new Response("Study plan feature coming soon", { status: 501 });
 }
 
@@ -14,6 +14,10 @@ export async function PUT(req: Request) {
     return new Response("Study plan feature coming soon", { status: 501 });
 }
 
-export async function GET(req: Request) {
+export async function GET() {
+    return new Response("Study plan feature coming soon", { status: 501 });
+}
+
+export async function DELETE(req: Request) {
     return new Response("Study plan feature coming soon", { status: 501 });
 } 

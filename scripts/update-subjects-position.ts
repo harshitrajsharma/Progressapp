@@ -1,4 +1,6 @@
-require('dotenv').config()
+import fs from 'fs';
+import path from 'path';
+import 'dotenv';
 const { PrismaClient } = require('@prisma/client')
 
 // Create Prisma client with debug logging

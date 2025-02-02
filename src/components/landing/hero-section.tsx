@@ -4,8 +4,6 @@ import React from "react";
 import Link from "next/link";
 import { ExamFoundationCard } from "@/components/dashboard/exam-foundation-card";
 import { dummyExamFoundation } from "@/lib/demo-data";
-import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
 
 export default function HeroSection() {
   return (

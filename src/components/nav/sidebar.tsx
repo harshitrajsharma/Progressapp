@@ -16,14 +16,16 @@ import {
   Calendar,
 } from "lucide-react";
 import { ExamCountdown } from "@/components/dashboard/exam-countdown";
+import { SidebarProgressCard } from "./sidebar-progress-card";
+import { calculateDashboardProgress } from "@/lib/calculations/dashboard-progress";
+import { DailyActivity } from "@prisma/client";
+import { SubjectWithRelations } from "@/lib/calculations/types";
 
 interface SidebarProps {
   isCollapsed: boolean;
-  examDate?: Date;
-  dailyActivities?: Array<{
-    date: Date;
-    studyTime: number;
-  }>;
+  examDate: Date;
+  dailyActivities: DailyActivity[];
+  subjects: SubjectWithRelations[];
 }
 
 function CollapsedExamCountdown({ daysLeft }: { daysLeft: number }) {
@@ -39,12 +41,18 @@ function CollapsedExamCountdown({ daysLeft }: { daysLeft: number }) {
   );
 }
 
-export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: SidebarProps) {
+export function Sidebar({
+  isCollapsed,
+  examDate,
+  dailyActivities,
+  subjects
+}: SidebarProps) {
   const pathname = usePathname();
-  const isOnDashboard = pathname === "/dashboard";
+  const isDashboard = pathname === "/dashboard";
+  const progress = calculateDashboardProgress(subjects);
 
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full w-full flex-col">
       {/* Header */}
       <div className="flex h-[60px] border-b items-center p-4">
         <Link
@@ -104,7 +112,7 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
             </Button>
           </Link>
           {/* Exam Countdown */}
-          {examDate && !isOnDashboard && (
+          {examDate && !isDashboard && (
             <div className={cn(
               "my-4 border-t border-b py-2",
               isCollapsed ? "" : ""
@@ -118,6 +126,18 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
               )}
             </div>
           )}
+
+          {/* Progress Card - Hidden on Dashboard */}
+          {!isDashboard && (
+            <div className="px-2 py-4 border-b">
+              <SidebarProgressCard
+                progress={progress}
+                isCollapsed={isCollapsed}
+                variant="sidebar"
+              />
+            </div>
+          )}
+
         </div>
 
 
@@ -138,7 +158,11 @@ export function Sidebar({ isCollapsed, examDate, dailyActivities = [] }: Sidebar
   );
 }
 
-export function MobileSidebar() {
+export function MobileSidebar({
+  examDate,
+  dailyActivities,
+  subjects
+}: Omit<SidebarProps, 'isCollapsed'>) {
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -148,7 +172,12 @@ export function MobileSidebar() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="p-0">
-        <Sidebar isCollapsed={false} />
+        <Sidebar
+          isCollapsed={false}
+          examDate={examDate}
+          dailyActivities={dailyActivities}
+          subjects={subjects}
+        />
       </SheetContent>
     </Sheet>
   );

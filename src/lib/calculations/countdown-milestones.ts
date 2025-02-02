@@ -1,5 +1,4 @@
 import { differenceInDays } from 'date-fns';
-import { SubjectWithRelations } from './types';
 
 // Standard GATE preparation milestones (days before exam)
 const GATE_MILESTONES = {

@@ -2,12 +2,13 @@
 
 import { useState, useEffect } from "react";
 import { Header } from "@/components/nav/header";
-import { Sidebar } from "@/components/nav/sidebar";
+import { Sidebar, MobileSidebar } from "@/components/nav/sidebar";
 import { MobileBottomNavbar } from "@/components/nav/mobile-bottom-navbar";
 import { Footer } from "@/components/footer";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { DailyActivity } from "@prisma/client";
+import { SubjectWithRelations } from "@/lib/calculations/types";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -18,7 +19,11 @@ export default function DashboardLayout({
 }: DashboardLayoutProps) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const { data: session } = useSession();
-  const [userData, setUserData] = useState<{ examDate: Date; dailyActivities: DailyActivity[] } | null>(null);
+  const [userData, setUserData] = useState<{ 
+    examDate: Date; 
+    dailyActivities: DailyActivity[];
+    subjects: SubjectWithRelations[];
+  } | null>(null);
 
   useEffect(() => {
     try {
@@ -46,7 +51,8 @@ export default function DashboardLayout({
           if (data.user) {
             setUserData({
               examDate: new Date(data.user.examDate),
-              dailyActivities: data.user.dailyActivities || []
+              dailyActivities: data.user.dailyActivities || [],
+              subjects: data.user.subjects || []
             });
           }
         } catch (error) {
@@ -66,12 +72,19 @@ export default function DashboardLayout({
       )}>
         <Sidebar 
           isCollapsed={isCollapsed} 
-          examDate={userData?.examDate} 
-          dailyActivities={userData?.dailyActivities || []} 
+          examDate={userData?.examDate || new Date()} 
+          dailyActivities={userData?.dailyActivities || []}
+          subjects={userData?.subjects || []}
         />
       </aside>
       <div className="flex-1 flex flex-col h-screen overflow-auto">
-        <Header />
+        <Header>
+          <MobileSidebar 
+            examDate={userData?.examDate || new Date()}
+            dailyActivities={userData?.dailyActivities || []}
+            subjects={userData?.subjects || []}
+          />
+        </Header>
         <main className="flex-1 p-8 pb-20 md:pb-8">
           {children}
         </main>

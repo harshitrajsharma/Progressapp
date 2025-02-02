@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import { SubjectWithRelations } from '@/types/prisma/subject';
 import { Topic, StudyProgress, PreparationConfig, TrackType, StudyBlock } from '@/types/gate-preparation';
+import fs from 'fs';
+import path from 'path';
 
 // Initialize Prisma client with increased timeout and connection retry
 const prisma = new PrismaClient({

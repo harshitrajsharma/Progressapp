@@ -6,7 +6,11 @@ import { format } from "date-fns";
 import { Clock } from "@/components/nav/clock";
 import { Calendar } from "lucide-react";
 
-export function Header() {
+interface HeaderProps {
+  children?: React.ReactNode;
+}
+
+export function Header({ children }: HeaderProps) {
   const currentDate = format(new Date(), "do MMM yyyy");
 
   return (
@@ -14,6 +18,7 @@ export function Header() {
       <Shell layout="dashboard">
         <div className="flex h-[60px] items-center justify-between">
           <div className="flex items-center gap-4">
+            {children}
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-lg">
                 <Calendar className="h-4 w-4  text-blue-500" />

@@ -1,4 +1,6 @@
-const { PrismaClient } = require('@prisma/client');
+import fs from 'fs';
+import path from 'path';
+import { PrismaClient } from '@prisma/client';
 
 // Define TestType enum since we can't import it properly in CommonJS
 enum TestType {

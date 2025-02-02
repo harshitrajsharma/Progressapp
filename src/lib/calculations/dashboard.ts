@@ -1,4 +1,4 @@
-import { DailyActivity, StudyStreak, Subject, MockTest } from "@prisma/client"
+import { DailyActivity, StudyStreak, MockTest } from "@prisma/client"
 import { SubjectWithRelations } from "./types"
 import { calculateSubjectProgress } from "./progress"
 

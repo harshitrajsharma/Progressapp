@@ -3,11 +3,11 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { withRetry } from "@/lib/db";
-import Loading from "@/components/loading";
 import { DashboardContent } from "@/components/dashboard/dashboard-content";
 import { redirect } from "next/navigation";
 import { User, MockTest, DailyActivity, StudyStreak } from "@prisma/client";
 import { SubjectWithRelations } from "@/lib/calculations/types";
+import { DashboardSkeleton } from "@/components/skeletons/dashboard-skeleton";
 
 interface DashboardUser extends User {
   name: string | null;
@@ -69,7 +69,7 @@ export default async function DashboardPage() {
   }
 
   return (
-    <Suspense fallback={<Loading />}>
+    <Suspense fallback={<DashboardSkeleton />}>
       <DashboardContent 
         user={{
           

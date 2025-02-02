@@ -22,7 +22,7 @@ export function MobileBottomNavbar() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 z-50 w-full h-14 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-t-blue-100/20 md:hidden">
+    <div className="fixed bottom-0 left-0 z-50 w-full h-14 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-t-blue-100/20 lg:hidden">
       <div className="grid h-full max-w-lg grid-cols-2 mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;

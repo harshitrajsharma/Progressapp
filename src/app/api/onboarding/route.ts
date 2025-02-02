@@ -13,12 +13,21 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { examName, examDate, targetScore, totalMarks, targetMarks } = body
 
+    // Ensure proper date handling
+    const parsedExamDate = new Date(examDate + 'T00:00:00.000Z')
+    if (isNaN(parsedExamDate.getTime())) {
+      return new NextResponse(
+        JSON.stringify({ error: "Invalid exam date format" }),
+        { status: 400 }
+      )
+    }
+
     // Update user with exam details and target score
     await prisma.user.update({
       where: { email: session.user.email },
       data: { 
         examName,
-        examDate: new Date(examDate),
+        examDate: parsedExamDate,
         targetScore: parseInt(targetScore),
         totalMarks: parseInt(totalMarks),
         targetMarks: parseInt(targetMarks),
