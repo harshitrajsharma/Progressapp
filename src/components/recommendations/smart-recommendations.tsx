@@ -6,7 +6,7 @@ import { useSession } from "next-auth/react";
 import { getSmartRecommendations } from "@/lib/recommendations/smart-recommendations";
 import { SubjectCard } from "./subject-card";
 import RecommendationSection from "./recommendation-section";
-import { Settings2, Pause, Play } from "lucide-react";
+import { Pause, Play, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -158,7 +158,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         <div className="flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-primary/60 bg-clip-text text-transparent">
                 Smart Recommendations
               </h1>
             </div>
@@ -166,13 +166,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               Based on your progress and {session?.user?.examName || "exam"} weightage
             </p>
           </div>
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 transition-transform hover:rotate-90"
-          >
-            <Settings2 className="h-4 w-4" />
-          </Button>
+            <Sparkles className="h-6 w-6 text-blue-500" />
         </div>
 
         {/* Desktop view */}
