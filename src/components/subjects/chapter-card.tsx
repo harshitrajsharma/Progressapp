@@ -129,7 +129,7 @@ const SortableTopicItem = memo(({
       style={style}
       {...attributes}
       className={cn(
-        "flex items-center gap-3 group",
+        "flex items-center gap-3 group hover:bg-white/5 rounded-md p-1 ",
         isDragging && "opacity-50"
       )}
     >
@@ -323,7 +323,7 @@ export function ChapterCard({
   }, [onDelete]);
 
   return (
-    <div className="space-y-4 p-4 rounded-lg border-2">
+    <div className="space-y-4 p-4 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 rounded-lg border-2">
       <div className="flex items-start justify-between">
         <div 
           className="flex-1 cursor-pointer select-none min-w-0"
@@ -364,7 +364,7 @@ export function ChapterCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 hover:text-green-400"
             onClick={() => setIsAddingTopic(true)}
           >
             <Plus className="h-4 w-4" />
@@ -372,7 +372,7 @@ export function ChapterCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8"
+            className="h-8 w-8 hover:text-yellow-400"
             onClick={() => setShowEditDialog(true)}
           >
             <Pencil className="h-4 w-4" />
@@ -380,7 +380,7 @@ export function ChapterCard({
           <Button
             variant="ghost"
             size="icon"
-            className="h-8 w-8 text-destructive"
+            className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/20"
             onClick={() => setShowDeleteDialog(true)}
           >
             <Trash2 className="h-4 w-4" />
@@ -401,11 +401,11 @@ export function ChapterCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-48">
               <DropdownMenuItem onClick={() => setIsAddingTopic(true)}>
-                <Plus className="h-4 w-4 mr-2" />
+                <Plus className="h-4 w-4 mr-2 focus:text-green-400" />
                 Add Topic
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowEditDialog(true)}>
-                <Pencil className="h-4 w-4 mr-2" />
+                <Pencil className="h-4 w-4 mr-2 focus:text-yellow-400" />
                 Edit Chapter
               </DropdownMenuItem>
               <DropdownMenuItem 

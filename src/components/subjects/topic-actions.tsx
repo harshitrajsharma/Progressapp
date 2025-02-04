@@ -95,13 +95,13 @@ export function TopicActions({
         variant="ghost"
         size="icon"
         className={cn(
-          "h-8 w-8 transition-colors",
+          "h-8 w-8 transition-colors hover:text-yellow-400",
           isImportant ? "text-yellow-500 hover:text-yellow-600" : "opacity-0 group-hover:opacity-100"
         )}
         onClick={() => handleUpdate({ important: !isImportant })}
         disabled={isUpdating}
       >
-        <Star className={cn("h-4 w-4", isImportant && "fill-current")} />
+        <Star className={cn("h-4 w-4 ", isImportant && "fill-current")} />
       </Button>
 
       {/* Other action buttons - only visible on hover */}
@@ -113,12 +113,12 @@ export function TopicActions({
           onClick={() => setShowEditDialog(true)}
           disabled={isUpdating}
         >
-          <Pencil className="h-4 w-4" />
+          <Pencil className="h-4 w-4 hover:text-yellow-400" />
         </Button>
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 text-destructive hover:bg-destructive/10"
+          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
           onClick={() => setShowDeleteDialog(true)}
           disabled={isUpdating}
         >
