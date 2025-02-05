@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, BookOpen } from "lucide-react";
+import { LayoutDashboard, BookOpen, ChartNoAxesCombined } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function MobileBottomNavbar() {
@@ -19,11 +19,16 @@ export function MobileBottomNavbar() {
       href: "/subjects",
       icon: BookOpen,
     },
+    {
+      title: "Analytics",
+      href: "/analytics",
+      icon: ChartNoAxesCombined,
+    },
   ];
 
   return (
     <div className="fixed bottom-0 left-0 z-50 w-full h-14 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 border-t border-t-blue-100/20 lg:hidden">
-      <div className="grid h-full max-w-lg grid-cols-2 mx-auto">
+      <div className="grid h-full max-w-lg grid-cols-3 mx-auto">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;

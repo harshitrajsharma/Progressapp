@@ -75,7 +75,7 @@ export default function DashboardLayout({
           }}
         />
       <aside className={cn(
-        "hidden md:flex h-screen flex-col border-r bg-background transition-all duration-300 sticky top-0",
+        "hidden lg:flex h-screen flex-col border-r bg-background transition-all duration-300 sticky top-0",
         isCollapsed ? "w-[80px]" : "w-[280px]"
       )}>
         <Sidebar

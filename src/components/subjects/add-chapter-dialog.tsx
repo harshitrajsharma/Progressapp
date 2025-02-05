@@ -53,6 +53,13 @@ export function AddChapterDialog({ subjectId, onSuccess }: AddChapterDialogProps
       
       const newChapter = await response.json()
 
+      if (onSuccess) {
+        onSuccess({
+          ...newChapter,
+          topics: newChapter.topics || [],
+        })
+      }
+
       toast({
         title: "Success",
         description: "Chapter has been created.",
@@ -62,13 +69,8 @@ export function AddChapterDialog({ subjectId, onSuccess }: AddChapterDialogProps
       setName("")
       setImportant(false)
       setOpen(false)
+      
       router.refresh()
-      if (onSuccess) {
-        onSuccess({
-          ...newChapter,
-          topics: newChapter.topics || [],
-        })
-      }
     } catch (error) {
       console.error(error)
       toast({

@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card"
 import { BookOpen } from "lucide-react"
 import { AddChapterDialog } from "./add-chapter-dialog"
 import { ChapterWithRelations } from "@/lib/calculations/types"
+import { useCallback } from "react"
 
 interface EmptyChaptersProps {
   subjectId: string;
@@ -9,6 +10,12 @@ interface EmptyChaptersProps {
 }
 
 export function EmptyChapters({ subjectId, onSuccess }: EmptyChaptersProps) {
+  const handleChapterCreated = useCallback((newChapter: ChapterWithRelations) => {
+    if (onSuccess) {
+      onSuccess(newChapter);
+    }
+  }, [onSuccess]);
+
   return (
     <Card className="p-8 flex flex-col items-center justify-center space-y-4">
       <BookOpen className="h-12 w-12 text-muted-foreground" />
@@ -19,7 +26,7 @@ export function EmptyChapters({ subjectId, onSuccess }: EmptyChaptersProps) {
       </div>
       <AddChapterDialog 
         subjectId={subjectId}
-        onSuccess={onSuccess}
+        onSuccess={handleChapterCreated}
       />
     </Card>
   )

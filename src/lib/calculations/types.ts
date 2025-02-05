@@ -1,5 +1,7 @@
 import { Chapter, Subject, Topic } from "@prisma/client"
 import type { SubjectWithRelations, FoundationLevel } from "@/types/prisma/subject"
+import { ChapterWithRelations as PrismaChapterWithRelations } from "@/types/prisma/chapter"
+import { SubjectWithRelations as PrismaSubjectWithRelations } from "@/types/prisma/subject"
 
 // Re-export the types
 export type { SubjectWithRelations, FoundationLevel }
@@ -9,11 +11,8 @@ export interface TopicWithRelations extends Topic {
   chapter: Chapter
 }
 
-export interface ChapterWithRelations extends Chapter {
-  topics: Topic[]
-  subject: Subject
-  position: number
-}
+export type ChapterWithRelations = PrismaChapterWithRelations
+export type SubjectWithRelations = PrismaSubjectWithRelations
 
 // Progress types
 export interface ProgressStats {

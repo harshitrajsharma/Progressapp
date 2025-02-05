@@ -15,7 +15,7 @@ interface RecommendationSectionProps {
   description: string;
   children: React.ReactNode;
   className?: string;
-  emptyMessage?: string;
+  emptyMessage?: React.ReactNode;
   isEmpty?: boolean;
 }
 
@@ -45,7 +45,9 @@ const RecommendationSection: React.FC<RecommendationSectionProps> = ({
       <div className="space-y-3">
         {isEmpty ? (
           <div className="flex flex-col items-center justify-center py-8 px-4 text-center space-y-2">
-            <p className="text-muted-foreground text-sm font-medium">{emptyMessage}</p>
+            {emptyMessage || (
+              <p className="text-muted-foreground text-sm font-medium">No items to display</p>
+            )}
           </div>
         ) : children}
       </div>

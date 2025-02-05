@@ -1,18 +1,23 @@
-import type { Metadata } from "next";
-import localFont from "next/font/local";
 import "./globals.css";
-import { RootProvider } from "@/components/providers/root-provider";
+import localFont from "next/font/local";
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import { RootLayout as ClientLayout } from "@/components/providers/root-layout";
 
+// Font definitions
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
   variable: "--font-geist-sans",
   weight: "100 900",
 });
+
 const geistMono = localFont({
   src: "./fonts/GeistMonoVF.woff",
   variable: "--font-geist-mono",
   weight: "100 900",
 });
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: 'Progress Tracking',
@@ -26,15 +31,15 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default function Layout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased`}>
-        <RootProvider>{children}</RootProvider>
+      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen bg-background font-sans antialiased ${inter.className}`}>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );

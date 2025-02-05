@@ -6,10 +6,11 @@ import { useSession } from "next-auth/react";
 import { getSmartRecommendations } from "@/lib/recommendations/smart-recommendations";
 import { SubjectCard } from "./subject-card";
 import RecommendationSection from "./recommendation-section";
-import { Pause, Play, Sparkles } from "lucide-react";
+import { Pause, Play, Sparkles, ChevronLeft, ChevronRight, BookOpen, Target, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface SmartRecommendationsProps {
   subjects: SubjectWithRelations[];
@@ -60,10 +61,21 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   const sections = [
     {
       title: "Revise",
-      icon: "🔄",
+      icon: <BookOpen className="h-5 w-5 text-emerald-500" />,
       description: "Subjects that need revision based on your learning progress",
       className: "bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-emerald-900/40 dark:to-emerald-800/40",
-      emptyMessage: "Great job! You're up to date with your revisions. 🎉",
+      emptyMessage: (
+        <div className="flex flex-col items-center space-y-4">
+          <BookOpen className="h-12 w-12 text-emerald-500 opacity-50" />
+          <p className="text-lg font-semibold">All Caught Up! 🌟</p>
+          <div className="text-center space-y-2">
+            <p>You&apos;re doing great with your revisions.</p>
+            <p className="text-sm text-muted-foreground">
+              Keep maintaining this momentum to strengthen your knowledge.
+            </p>
+          </div>
+        </div>
+      ),
       subjects: reviseSubjects.map(({ subject, revisionProgress }) => ({
         subject,
         progress: revisionProgress,
@@ -76,10 +88,21 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
     },
     {
       title: "Priority Focus",
-      icon: "🎯",
+      icon: <Target className="h-5 w-5 text-blue-500" />,
       description: "Subjects that need immediate attention based on learning progress",
       className: "bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/40",
-      emptyMessage: "Excellent! You're on track with all your subjects. 🌟",
+      emptyMessage: (
+        <div className="flex flex-col items-center space-y-4">
+          <Target className="h-12 w-12 text-blue-500 opacity-50" />
+          <p className="text-lg font-semibold">Time to Begin Your Journey! 🚀</p>
+          <div className="text-center space-y-2">
+            <p>You haven&apos;t started any subjects yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Pick a subject from the &quot;Start Next&quot; section and begin your learning adventure.
+            </p>
+          </div>
+        </div>
+      ),
       subjects: priorityFocusSubjects.map(({ subject, learningProgress }, index) => ({
         subject,
         progress: learningProgress,
@@ -93,12 +116,23 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         )
       }))
     },
-    {
+    ...(startNextSubjects.length > 0 ? [{
       title: "Start Next",
-      icon: "🚀",
+      icon: <Rocket className="h-5 w-5 text-amber-500" />,
       description: `Recommended subjects to start based on ${session?.user?.examName || "exam"} weightage`,
       className: "bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-900/40 dark:to-amber-800/40",
-      emptyMessage: "Congratulations! You've started all your subjects. 🎯",
+      emptyMessage: (
+        <div className="flex flex-col items-center space-y-4">
+          <Rocket className="h-12 w-12 text-amber-500 opacity-50" />
+          <p className="text-lg font-semibold">Ready for Takeoff! 🎯</p>
+          <div className="text-center space-y-2">
+            <p>Your learning journey awaits!</p>
+            <p className="text-sm text-muted-foreground">
+              Choose a subject that interests you and start making progress today.
+            </p>
+          </div>
+        </div>
+      ),
       subjects: startNextSubjects.map(({ subject }) => ({
         subject,
         progress: 0,
@@ -108,7 +142,33 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         cardClassName: "bg-white/80 dark:bg-amber-900/60 hover:bg-amber-50/90 dark:hover:bg-amber-800/80",
         behindTarget: undefined
       }))
-    }
+    }] : [{
+      title: "Test Progress",
+      icon: <Target className="h-5 w-5 text-purple-500" />,
+      description: "Track your test performance across all subjects",
+      className: "bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/40",
+      emptyMessage: (
+        <div className="flex flex-col items-center space-y-4">
+          <Target className="h-12 w-12 text-purple-500 opacity-50" />
+          <p className="text-lg font-semibold">Time to Test Your Knowledge! 📝</p>
+          <div className="text-center space-y-2">
+            <p>You&apos;ve haven&apos;t taken any tests yet.</p>
+            <p className="text-sm text-muted-foreground">
+              Start taking tests to measure your understanding and track your progress.
+            </p>
+          </div>
+        </div>
+      ),
+      subjects: subjects.map(subject => ({
+        subject,
+        progress: subject.testProgress || 0,
+        variant: "purple",
+        status: "Take a test",
+        statusColor: "text-purple-500",
+        cardClassName: "bg-white/80 dark:bg-purple-900/60 hover:bg-purple-50/90 dark:hover:bg-purple-800/80",
+        behindTarget: undefined
+      }))
+    }])
   ];
 
   // Auto-carousel effect
@@ -153,20 +213,20 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   };
 
   return (
-    <Card className="p-6 bg-background/50 backdrop-blur-sm border border-white/20">
+    <Card className="p-4 md:p-6 md:bg-background/50 backdrop-blur-sm ">
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <div>
-            <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-200 to-primary/60 bg-clip-text text-transparent">
+          <div className='w-full'>
+            <div className="flex items-center justify-between w-full gap-2">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-violet-500 to-blue-500 bg-clip-text text-transparent animate-gradient">
                 Smart Recommendations
               </h1>
+              <Sparkles className="h-6 w-6 text-blue-500 " />
             </div>
             <p className="text-sm text-muted-foreground mt-1">
               Based on your progress and {session?.user?.examName || "exam"} weightage
             </p>
           </div>
-            <Sparkles className="h-6 w-6 text-blue-500" />
         </div>
 
         {/* Desktop view */}
@@ -176,7 +236,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               key={section.title}
               title={
                 <div className="flex items-center gap-2">
-                  <span>{section.icon}</span>
+                  {section.icon}
                   <span>{section.title}</span>
                 </div>
               }
@@ -218,12 +278,18 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
-            <div>
-              <div className="transition-opacity duration-300">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSection}
+                initial={{ opacity: 0, x: 100 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -100 }}
+                transition={{ duration: 0.3 }}
+              >
                 <RecommendationSection
                   title={
                     <div className="flex items-center gap-2">
-                      <span>{sections[activeSection].icon}</span>
+                      {sections[activeSection].icon}
                       <span>{sections[activeSection].title}</span>
                     </div>
                   }
@@ -252,46 +318,59 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                     />
                   ))}
                 </RecommendationSection>
-              </div>
-            </div>
-          </div>
+              </motion.div>
+            </AnimatePresence>
 
-          {/* Progress bar and dots */}
-          <div className="mt-4 space-y-2">
-
-            {/* Navigation dots */}
-            <div className="flex items-center justify-center gap-4">
+            {/* Swipe indicators */}
+            <div className="absolute inset-y-0 left-0 flex items-center">
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 bg-muted-foreground/30 p-4 rounded-full"
-                onClick={() => setIsAutoPlay(!isAutoPlay)}
+                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                onClick={() => setActiveSection((prev) => (prev - 1 + sections.length) % sections.length)}
               >
-                {isAutoPlay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+                <ChevronLeft className="h-4 w-4" />
               </Button>
-              <div className=' flex items-center gap-2'>
-                {sections.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveSection(index)}
-                    className={cn(
-                      "w-2 h-2 rounded-full transition-all duration-1000",
-                      activeSection === index
-                        ? "bg-primary w-6"
-                        : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                    )}
-                    style={{
-                      animationPlayState: isAutoPlay ? "running" : "paused"
-                    }}
-                  />
-                ))}
-              </div>
-
             </div>
+            <div className="absolute inset-y-0 right-0 flex items-center">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+                onClick={() => setActiveSection((prev) => (prev + 1) % sections.length)}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+
           </div>
 
-
-          
+          {/* Autoplay control */}
+          <div className=" mt-2 gap-2 flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 rounded-full bg-background/80 backdrop-blur-sm"
+              onClick={() => setIsAutoPlay(!isAutoPlay)}
+            >
+              {isAutoPlay ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+            </Button>
+            {/* Mini previews */}
+            <div className=" flex justify-center gap-2">
+              {sections.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => setActiveSection(index)}
+                  className={cn(
+                    "w-2 h-2 rounded-full transition-all duration-300",
+                    activeSection === index
+                      ? "bg-primary w-8"
+                      : "bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  )}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </Card>

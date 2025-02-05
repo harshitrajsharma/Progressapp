@@ -137,50 +137,74 @@ export default function SubjectPage() {
         ? checkboxIndex + 1 
         : Math.min(3, topic[`${selectedCategory}Count`] + 1);
 
-    // Update topic status with existing topic data
-    updateTopicStatus(
-      topicId,
-      topic.name,
-      selectedCategory,
-      currentValue,
-      newValue,
-      (data) => {
-        setSubject(prev => {
-          if (!prev) return prev;
-          
-          const updatedSubject = {
-            ...prev,
-            chapters: prev.chapters.map(chapter => 
-              chapter.id === chapterId
-                ? {
-                    ...chapter,
-                    topics: chapter.topics.map(t =>
-                      t.id === topicId 
-                        ? {
-                            ...t,
-                            ...data.topic,
-                            // Ensure all values are preserved
-                            learningStatus: data.topic.learningStatus ?? t.learningStatus,
-                            revisionCount: data.topic.revisionCount ?? t.revisionCount,
-                            practiceCount: data.topic.practiceCount ?? t.practiceCount,
-                            testCount: data.topic.testCount ?? t.testCount
-                          }
-                        : t
-                    )
-                  }
-                : chapter
-            )
-          };
-          
-          // Clear progress cache to force recalculation
-          progressCache.clear();
-          
-          return updatedSubject;
-        });
-      },
-      topic // Pass existing topic data
-    );
-  }, [subject, selectedCategory, updateTopicStatus]);
+    try {
+      // Store progress in database
+      const progressResponse = await fetch(`/api/topics/${topicId}/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          type: selectedCategory,
+        }),
+      });
+
+      if (!progressResponse.ok) {
+        throw new Error('Failed to store progress');
+      }
+
+      // Update topic status with existing topic data
+      updateTopicStatus(
+        topicId,
+        topic.name,
+        selectedCategory,
+        currentValue,
+        newValue,
+        (data) => {
+          setSubject(prev => {
+            if (!prev) return prev;
+            
+            const updatedSubject = {
+              ...prev,
+              chapters: prev.chapters.map(chapter => 
+                chapter.id === chapterId
+                  ? {
+                      ...chapter,
+                      topics: chapter.topics.map(t =>
+                        t.id === topicId 
+                          ? {
+                              ...t,
+                              ...data.topic,
+                              // Ensure all values are preserved
+                              learningStatus: data.topic.learningStatus ?? t.learningStatus,
+                              revisionCount: data.topic.revisionCount ?? t.revisionCount,
+                              practiceCount: data.topic.practiceCount ?? t.practiceCount,
+                              testCount: data.topic.testCount ?? t.testCount
+                            }
+                          : t
+                      )
+                    }
+                  : chapter
+              )
+            };
+            
+            // Clear progress cache to force recalculation
+            progressCache.clear();
+            
+            return updatedSubject;
+          });
+        },
+        topic // Pass existing topic data
+      );
+    } catch (error) {
+      console.error('Error storing progress:', error);
+      toast({
+        title: "Error",
+        description: "Failed to store progress. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [subject, selectedCategory, updateTopicStatus, toast]);
 
   const handleChapterEdit = useCallback((chapterId: string, updatedChapter: { name: string; important: boolean }) => {
     setSubject(prev => {
@@ -272,20 +296,16 @@ export default function SubjectPage() {
   }, [toast]);
 
   const handleAddChapter = useCallback((newChapter: ChapterWithRelations) => {
+    if (!subject) return;
+    
     setSubject(prev => {
       if (!prev) return prev;
       return {
         ...prev,
         chapters: [...prev.chapters, newChapter]
-      } as SubjectWithRelations;
+      };
     });
-
-    toast({
-      title: "Success",
-      description: "Chapter added successfully",
-      className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
-    });
-  }, [toast]);
+  }, [subject]);
 
   const handleChapterDelete = useCallback(async (chapterId: string) => {
     if (!subject) return;
@@ -605,7 +625,10 @@ export default function SubjectPage() {
 
         <div className="space-y-4">
           {filteredChapters.length === 0 ? (
-            <EmptyChapters subjectId={subject.id} />
+            <EmptyChapters 
+              subjectId={subject.id} 
+              onSuccess={handleAddChapter}
+            />
           ) : (
             <Suspense fallback={
               <div className="space-y-4">

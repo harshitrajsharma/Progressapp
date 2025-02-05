@@ -69,6 +69,7 @@ model User {
   testProgress  TestProgress[]
   focusSessions FocusSession[]
   settings      UserSettings?
+  topicProgress TopicProgress[]
 }
 
 model VerificationToken {
@@ -102,6 +103,7 @@ model Subject {
   performanceMetrics PerformanceMetrics[]
   testProgressRecords TestProgress[]
   focusSessions     FocusSession[]
+  progress        TopicProgress[]
 
   @@index([userId])
 }
@@ -137,6 +139,7 @@ model Topic {
   nextRevision    DateTime?
   chapterId       String
   chapter         Chapter   @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  progress        TopicProgress[]
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 
@@ -519,5 +522,27 @@ model UserSettings {
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
   user              User     @relation(fields: [userEmail], references: [email], onDelete: Cascade)
+}
+
+model TopicProgress {
+  id          String   @id @default(cuid()) @map("_id")
+  topicId     String
+  topic       Topic    @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subjectId   String
+  subject     Subject  @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  
+  // Progress type
+  type        String   // "learning", "revision", "practice", "test"
+  
+  // Progress details
+  completed   Boolean  @default(false)
+  date        DateTime @default(now())
+  
+  @@index([topicId])
+  @@index([userId])
+  @@index([subjectId])
+  @@index([date])
 }
 

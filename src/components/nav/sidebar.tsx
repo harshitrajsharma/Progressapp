@@ -14,6 +14,7 @@ import {
   LogOut,
   Menu,
   Calendar,
+  ChartNoAxesCombined,
 } from "lucide-react";
 import { ExamCountdown } from "@/components/dashboard/exam-countdown";
 import { SidebarProgressCard } from "./sidebar-progress-card";
@@ -111,6 +112,21 @@ export function Sidebar({
               {!isCollapsed && <span>Subjects</span>}
             </Button>
           </Link>
+          <Link href="/analytics">
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-2",
+                pathname?.startsWith("/subjects") && "bg-secondary"
+              )}
+            >
+              <ChartNoAxesCombined className="h-5 w-5 text-yellow-500" />
+              {!isCollapsed && <span>Analytics</span>}
+            </Button>
+          </Link>
+
+
+
           {/* Exam Countdown */}
           {examDate && !isDashboard && (
             <div className={cn(
