@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { withRetry } from "@/lib/db";
+import { startOfMonth, endOfMonth } from "date-fns";
 
 export async function GET() {
   try {
@@ -16,15 +17,24 @@ export async function GET() {
     }
 
     const user = await withRetry(async () => {
+      const now = new Date();
+      const monthStart = startOfMonth(now);
+      const monthEnd = endOfMonth(now);
+
       return await prisma.user.findUnique({
         where: { email: session.user.email },
         select: {
           examDate: true,
           dailyActivities: {
-            orderBy: {
-              date: 'desc'
+            where: {
+              date: {
+                gte: monthStart,
+                lte: monthEnd
+              }
             },
-            take: 30 // Last 30 days
+            orderBy: {
+              date: 'asc'
+            }
           },
           subjects: {
             include: {

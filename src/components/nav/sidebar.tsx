@@ -19,37 +19,22 @@ import {
 import { ExamCountdown } from "@/components/dashboard/exam-countdown";
 import { SidebarProgressCard } from "./sidebar-progress-card";
 import { calculateDashboardProgress } from "@/lib/calculations/dashboard-progress";
-import { DailyActivity } from "@prisma/client";
 import { SubjectWithRelations } from "@/lib/calculations/types";
 
 interface SidebarProps {
   isCollapsed: boolean;
   examDate: Date;
-  dailyActivities: DailyActivity[];
   subjects: SubjectWithRelations[];
-}
-
-function CollapsedExamCountdown({ daysLeft }: { daysLeft: number }) {
-  return (
-    <div className="flex items-center justify-center py-4">
-      <div className="relative">
-        <Calendar className="h-6 w-6 text-blue-500" />
-        <div className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center">
-          <span className="text-white text-xs font-bold">{daysLeft - 1}</span>
-        </div>
-      </div>
-    </div>
-  );
 }
 
 export function Sidebar({
   isCollapsed,
   examDate,
-  dailyActivities,
   subjects
 }: SidebarProps) {
   const pathname = usePathname();
   const isDashboard = pathname === "/dashboard";
+  const isAnalytics = pathname === "/analytics";
   const progress = calculateDashboardProgress(subjects);
 
   return (
@@ -117,7 +102,7 @@ export function Sidebar({
               variant="ghost"
               className={cn(
                 "w-full justify-start gap-2",
-                pathname?.startsWith("/subjects") && "bg-secondary"
+                pathname?.startsWith("/analytics") && "bg-secondary"
               )}
             >
               <ChartNoAxesCombined className="h-5 w-5 text-yellow-500" />
@@ -125,19 +110,29 @@ export function Sidebar({
             </Button>
           </Link>
 
-
-
           {/* Exam Countdown */}
-          {examDate && !isDashboard && (
+          {examDate && !isDashboard && !isAnalytics && (
             <div className={cn(
-              "my-4 border-t border-b py-2",
+              "border-t border-b py-2",
               isCollapsed ? "" : ""
             )}>
               {isCollapsed ? (
-                <CollapsedExamCountdown daysLeft={Math.ceil((new Date(examDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} />
+                <div className="flex items-center justify-center py-4">
+                  <div className="relative">
+                    <Calendar className="h-6 w-6 text-blue-500" />
+                    <div className="absolute -top-2 -right-2 bg-red-600 rounded-full w-5 h-5 flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">
+                        {Math.max(0, Math.ceil((examDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24)))}
+                      </span>
+                    </div>
+                  </div>
+                </div>
               ) : (
                 <div className="px-2">
-                  <ExamCountdown variant="sidebar" examDate={new Date(examDate)} dailyActivities={dailyActivities} />
+                  <ExamCountdown 
+                    variant="sidebar"
+                    examDate={examDate}
+                  />
                 </div>
               )}
             </div>
@@ -145,7 +140,7 @@ export function Sidebar({
 
           {/* Progress Card - Hidden on Dashboard */}
           {!isDashboard && (
-            <div className="px-2 py-4 border-b">
+            <div className="px-2 py-4 border-t border-b">
               <SidebarProgressCard
                 progress={progress}
                 isCollapsed={isCollapsed}
@@ -153,10 +148,7 @@ export function Sidebar({
               />
             </div>
           )}
-
         </div>
-
-
 
         {/* Bottom Logout Button */}
         <div className="flex flex-col gap-2">
@@ -176,7 +168,6 @@ export function Sidebar({
 
 export function MobileSidebar({
   examDate,
-  dailyActivities,
   subjects
 }: Omit<SidebarProps, 'isCollapsed'>) {
   return (
@@ -191,7 +182,6 @@ export function MobileSidebar({
         <Sidebar
           isCollapsed={false}
           examDate={examDate}
-          dailyActivities={dailyActivities}
           subjects={subjects}
         />
       </SheetContent>

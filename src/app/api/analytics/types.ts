@@ -23,5 +23,6 @@ export interface CalendarActivity {
   totalCount: number;
   goalProgress: number;
   currentStreak: number;
+  longestStreak: number;
   details: DailyActivityDetails;
 } 

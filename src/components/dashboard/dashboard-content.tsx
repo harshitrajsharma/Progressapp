@@ -106,6 +106,12 @@ export function DashboardContent({ user }: DashboardContentProps) {
                                 />
                             </div>
 
+                            <ExamFoundationCard
+                                key={JSON.stringify(foundationResult)}
+                                result={foundationResult}
+                                examName={user.examName}
+                            />
+
                             <DashboardProgressOverview
                                 progress={progress}
                                 subjects={user.subjects}
@@ -114,7 +120,6 @@ export function DashboardContent({ user }: DashboardContentProps) {
                             <div className="w-full">
                                 <ExamCountdown
                                     examDate={user.examDate}
-                                    dailyActivities={user.dailyActivities}
                                 />
                             </div>
                         </div>
@@ -127,7 +132,6 @@ export function DashboardContent({ user }: DashboardContentProps) {
                                 <div className="lg:w-[45%]">
                                     <ExamCountdown
                                         examDate={user.examDate}
-                                        dailyActivities={user.dailyActivities}
                                     />
                                 </div>
                                 <div className=" lg:w-[55%] space-y-6">

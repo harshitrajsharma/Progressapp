@@ -34,6 +34,7 @@ export function ExamDetailsSection() {
       toast.success('Exam details updated successfully');
       setIsEditing(false);
     } catch (error) {
+      console.error('Failed to update exam details:', error);
       toast.error('Failed to update exam details');
     }
   };

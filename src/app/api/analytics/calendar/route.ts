@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-import { startOfDay, endOfDay, subDays } from "date-fns";
+import { startOfDay, endOfDay, subDays, eachDayOfInterval } from "date-fns";
 
 type ActivityType = 'learning' | 'revision' | 'practice' | 'test';
 
@@ -25,6 +25,71 @@ interface ActivityDetails {
   revision: ActivityDetail[];
   practice: ActivityDetail[];
   test: ActivityDetail[];
+}
+
+async function calculateStreak(userId: string): Promise<{ currentStreak: number; longestStreak: number }> {
+  // Get all completed activities in the last 365 days for accurate streak calculation
+  const yearAgo = subDays(new Date(), 365);
+  
+  const activities = await prisma.topicProgress.findMany({
+    where: {
+      userId,
+      completed: true,
+      date: {
+        gte: startOfDay(yearAgo),
+      },
+    },
+    orderBy: {
+      date: 'desc',
+    },
+    select: {
+      date: true,
+    },
+  });
+
+  if (activities.length === 0) return { currentStreak: 0, longestStreak: 0 };
+
+  // Group activities by date
+  const activeDates = new Set(
+    activities.map(activity => startOfDay(activity.date).toISOString())
+  );
+
+  // Calculate current streak
+  let currentStreak = 0;
+  let currentDate = new Date();
+  
+  // If no activity today, start checking from yesterday
+  if (!activeDates.has(startOfDay(currentDate).toISOString())) {
+    currentDate = subDays(currentDate, 1);
+  }
+
+  // Count consecutive days
+  while (activeDates.has(startOfDay(currentDate).toISOString())) {
+    currentStreak++;
+    currentDate = subDays(currentDate, 1);
+  }
+
+  // Calculate longest streak
+  let longestStreak = 0;
+  let currentLongStreak = 0;
+  
+  // Get all dates in range
+  const dateRange = eachDayOfInterval({
+    start: yearAgo,
+    end: new Date()
+  });
+
+  // Calculate streaks
+  for (const date of dateRange) {
+    if (activeDates.has(startOfDay(date).toISOString())) {
+      currentLongStreak++;
+      longestStreak = Math.max(longestStreak, currentLongStreak);
+    } else {
+      currentLongStreak = 0;
+    }
+  }
+
+  return { currentStreak, longestStreak };
 }
 
 export async function GET(request: Request) {
@@ -77,26 +142,8 @@ export async function GET(request: Request) {
       },
     });
 
-    // Calculate current streak
-    let currentStreak = 0;
-    let currentDate = new Date();
-    
-    while (true) {
-      const dayProgress = await prisma.topicProgress.findFirst({
-        where: {
-          userId: user.id,
-          date: {
-            gte: startOfDay(currentDate),
-            lte: endOfDay(currentDate),
-          },
-          completed: true,
-        },
-      });
-
-      if (!dayProgress) break;
-      currentStreak++;
-      currentDate = subDays(currentDate, 1);
-    }
+    // Calculate streak with improved logic
+    const { currentStreak, longestStreak } = await calculateStreak(user.id);
 
     // Group activities by type
     const details = topicProgress.reduce<ActivityDetails>(
@@ -151,6 +198,7 @@ export async function GET(request: Request) {
       ...counts,
       goalProgress,
       currentStreak,
+      longestStreak,
       details,
     });
   } catch (error) {
