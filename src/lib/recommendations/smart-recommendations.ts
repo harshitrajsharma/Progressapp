@@ -1,5 +1,5 @@
-import { SubjectWithRelations } from "../calculations/types";
-import { calculateSubjectProgress } from "../calculations/progress";
+import { SubjectWithRelations } from "@/lib/calculations/types";
+import { calculateSubjectProgress } from "@/lib/calculations";
 
 // Define math subjects constant at the top level
 const MATH_SUBJECTS = ['Discrete Maths', 'Engineering Maths', 'Aptitude'] as const;
@@ -9,197 +9,103 @@ function isMathSubject(name: string): name is MathSubject {
   return MATH_SUBJECTS.includes(name as MathSubject);
 }
 
-export interface SmartRecommendations {
-  priorityFocus: Array<{
-    subject: SubjectWithRelations;
-    learningProgress: number;
-  }>;
-  startNext: Array<{
-    subject: SubjectWithRelations;
-    weightage: number;
-  }>;
-  revise: Array<{
-    subject: SubjectWithRelations;
-    learningProgress: number;
-    revisionProgress: number;
-  }>;
-  practice: Array<{
-    subject: SubjectWithRelations;
-    weightage: number;
-    learningProgress: number;
-    revisionProgress: number;
-    practiceProgress: number;
-    combinedScore: number;
-  }>;
-  test: Array<{
-    subject: SubjectWithRelations;
-    weightage: number;
-    learningProgress: number;
-    revisionProgress: number;
-    practiceProgress: number;
-    testProgress: number;
-    combinedScore: number;
-  }>;
+interface SubjectRecommendation {
+  subject: SubjectWithRelations;
+  learningProgress: number;
+  revisionProgress: number;
+  testProgress: number;
+  weightage: number;
+  isMathSubject: boolean;
 }
 
-/**
- * Calculate a combined score for subject prioritization
- */
-function calculateCombinedScore(
-  weightage: number,
-  learningProgress: number,
-  revisionProgress: number,
-  practiceProgress: number = 0,
-  testProgress: number = 0
-): number {
-  // Normalize weightage to 0-100 scale (assuming max weightage is 20)
-  const normalizedWeightage = (weightage / 20) * 100;
-  
-  // Calculate combined score with weighted components
-  return (
-    normalizedWeightage * 0.4 +      // 40% weightage importance
-    learningProgress * 0.3 +         // 30% learning progress
-    revisionProgress * 0.2 +         // 20% revision progress
-    practiceProgress * 0.05 +        // 5% practice progress
-    testProgress * 0.05             // 5% test progress
-  );
+interface Recommendations {
+  revise: SubjectRecommendation[];
+  priorityFocus: SubjectRecommendation[];
+  startNext: SubjectRecommendation[];
+  testProgress: SubjectRecommendation[];
 }
 
-/**
- * Get smart recommendations for subjects based on progress and weightage
- */
-export function getSmartRecommendations(subjects: SubjectWithRelations[]): SmartRecommendations {
-  // Calculate progress for each subject
-  const subjectsWithProgress = subjects.map(subject => ({
-    subject,
-    progress: calculateSubjectProgress(subject)
-  }));
+// Helper function to calculate priority score
+function calculatePriorityScore(weightage: number, progress: number): number {
+  // Higher weightage and higher progress means higher priority
+  return weightage * progress;
+}
 
-  // Split subjects into math and non-math
-  const mathSubjects = subjectsWithProgress.filter(({ subject }) => 
-    isMathSubject(subject.name)
-  );
-  
-  console.log('Available Math Subjects:', mathSubjects.map(s => ({
-    name: s.subject.name,
-    progress: s.progress.learning
-  })));
-
-  const nonMathSubjects = subjectsWithProgress.filter(({ subject }) => 
-    !isMathSubject(subject.name)
-  );
-
-  // Priority Focus: Handle math and non-math subjects separately
-  const priorityFocusMath = mathSubjects
-    .filter(({ progress }) => {
-      const hasProgress = progress.learning > 0;
-      const notComplete = progress.learning < 90;
-      return hasProgress && notComplete;
-    })
-    .sort((a, b) => b.progress.learning - a.progress.learning)
-    .slice(0, 1)
-    .map(({ subject, progress }) => ({
-      subject,
-      learningProgress: progress.learning
-    }));
-
-  console.log('Selected Math Subject:', priorityFocusMath);
-
-  const priorityFocusOthers = nonMathSubjects
-    .filter(({ progress }) => progress.learning > 0 && progress.learning < 90)
-    .sort((a, b) => b.progress.learning - a.progress.learning)
-    .slice(0, 2)
-    .map(({ subject, progress }) => ({
-      subject,
-      learningProgress: progress.learning
-    }));
-
-  // Combine with non-math subjects first, then math subjects
-  const priorityFocus = [...priorityFocusOthers, ...priorityFocusMath];
-  
-  console.log('Final Priority Focus:', priorityFocus.map(p => ({
-    name: p.subject.name,
-    progress: p.learningProgress,
-    isMath: MATH_SUBJECTS.includes(p.subject.name as MathSubject)
-  })));
-
-  // Start Next: Only show non-math subjects with 0% progress
-  const startNext = nonMathSubjects
-    .filter(({ progress }) => progress.learning === 0)
-    .sort((a, b) => b.subject.weightage - a.subject.weightage)
-    .slice(0, 3)
-    .map(({ subject }) => ({
-      subject,
-      weightage: subject.weightage
-    }));
-
-  // Revise: Include all subjects that meet criteria
-  const revise = subjectsWithProgress
-    .filter(({ progress }) => 
-      progress.learning > 40 && 
-      progress.revision > 0 &&
-      progress.revision < 100
-    )
-    .sort((a, b) => {
-      const aCombined = a.progress.learning + a.progress.revision;
-      const bCombined = b.progress.learning + b.progress.revision;
-      return bCombined - aCombined;
-    })
-    .slice(0, 3)
-    .map(({ subject, progress }) => ({
+export function getSmartRecommendations(subjects: SubjectWithRelations[]): Recommendations {
+  // Convert subjects to recommendations with progress data
+  const subjectRecommendations: SubjectRecommendation[] = subjects.map(subject => {
+    const progress = calculateSubjectProgress(subject);
+    return {
       subject,
       learningProgress: progress.learning,
-      revisionProgress: progress.revision
-    }));
+      revisionProgress: progress.revision,
+      testProgress: progress.test,
+      weightage: subject.weightage,
+      isMathSubject: isMathSubject(subject.name)
+    };
+  });
 
-  // Practice: Show subjects ordered by weightage and progress, exclude 100% practice
-  const practice = subjectsWithProgress
-    .filter(({ progress }) => progress.practice < 100)
-    .map(({ subject, progress }) => {
-      const combinedScore = calculateCombinedScore(
-        subject.weightage,
-        progress.learning,
-        progress.revision,
-        progress.practice
-      );
-      return {
-        subject,
-        weightage: subject.weightage,
-        learningProgress: progress.learning,
-        revisionProgress: progress.revision,
-        practiceProgress: progress.practice,
-        combinedScore
-      };
+  // Filter subjects that need revision (high learning, low revision)
+  const reviseSubjects = subjectRecommendations
+    .filter(rec => rec.learningProgress > 70 && rec.revisionProgress < 70)
+    .sort((a, b) => {
+      // Sort by priority score (weightage * revisionProgress)
+      const scoreA = calculatePriorityScore(a.weightage, a.revisionProgress);
+      const scoreB = calculatePriorityScore(b.weightage, b.revisionProgress);
+      return scoreB - scoreA;
     })
-    .sort((a, b) => b.combinedScore - a.combinedScore);
+    .slice(0, 3);
 
-  // Test: Show subjects ordered by weightage and all progress metrics
-  const test = subjectsWithProgress
-    .map(({ subject, progress }) => {
-      const combinedScore = calculateCombinedScore(
-        subject.weightage,
-        progress.learning,
-        progress.revision,
-        progress.practice,
-        progress.test
-      );
-      return {
-        subject,
-        weightage: subject.weightage,
-        learningProgress: progress.learning,
-        revisionProgress: progress.revision,
-        practiceProgress: progress.practice,
-        testProgress: progress.test,
-        combinedScore
-      };
+  // Get subjects for priority focus
+  const inProgressSubjects = subjectRecommendations
+    .filter(rec => rec.learningProgress > 0 && rec.learningProgress < 90);
+
+  // Separate math and non-math subjects
+  const mathSubjects = inProgressSubjects.filter(rec => rec.isMathSubject);
+  const nonMathSubjects = inProgressSubjects.filter(rec => !rec.isMathSubject);
+
+  // Sort both arrays by priority score
+  const sortByPriority = (a: SubjectRecommendation, b: SubjectRecommendation) => 
+    calculatePriorityScore(b.weightage, b.learningProgress) - 
+    calculatePriorityScore(a.weightage, a.learningProgress);
+
+  mathSubjects.sort(sortByPriority);
+  nonMathSubjects.sort(sortByPriority);
+
+  // Select priority focus subjects
+  let priorityFocusSubjects: SubjectRecommendation[] = [];
+  
+  if (mathSubjects.length > 0) {
+    // If we have math subjects in progress, take 2 non-math and 1 math
+    priorityFocusSubjects = [
+      ...nonMathSubjects.slice(0, 2),
+      mathSubjects[0]
+    ];
+  } else {
+    // If no math subjects in progress, take 3 non-math subjects
+    priorityFocusSubjects = nonMathSubjects.slice(0, 3);
+  }
+
+  // Get subjects to start next (no progress or very low progress)
+  const startNextSubjects = subjectRecommendations
+    .filter(rec => rec.learningProgress === 0 || rec.learningProgress < 10)
+    .sort((a, b) => b.weightage - a.weightage)
+    .slice(0, 3);
+
+  // Get test progress subjects (sort by priority score)
+  const testProgressSubjects = [...subjectRecommendations]
+    .sort((a, b) => {
+      // Sort by priority score (weightage * testProgress)
+      const scoreA = calculatePriorityScore(a.weightage, a.testProgress);
+      const scoreB = calculatePriorityScore(b.weightage, b.testProgress);
+      return scoreB - scoreA;
     })
-    .sort((a, b) => b.combinedScore - a.combinedScore);
+    .slice(0, 3);
 
   return {
-    priorityFocus,
-    startNext,
-    revise,
-    practice,
-    test
+    revise: reviseSubjects,
+    priorityFocus: priorityFocusSubjects,
+    startNext: startNextSubjects,
+    testProgress: testProgressSubjects
   };
 } 

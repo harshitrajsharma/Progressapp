@@ -211,7 +211,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                   <span>•</span>
                   <span>{totalTopics} topics</span>
                 </div>
-                <Badge variant="secondary" className="text-[10px] sm:text-xs font-normal">
+                <Badge variant="secondary" className=" text-[10px] sm:text-xs font-normal">
                   {subject.weightage} marks
                 </Badge>
               </div>
@@ -221,10 +221,10 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
             <div className="grid grid-cols-2 gap-3 sm:gap-4">
               {/* Subject Weightage */}
               <div className="relative bg-background dark:bg-background rounded-lg sm:rounded-xl overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-green-300" />
+                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-green-500" />
                 <div className="p-2 sm:p-2.5">
                   <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">subject weightage </p>
-                  <p className="text-base sm:text-lg font-semibold text-green-300 mt-0.5">
+                  <p className="text-base sm:text-lg font-semibold text-green-500 mt-0.5">
                     {subject.weightage} Marks
                   </p>
                 </div>

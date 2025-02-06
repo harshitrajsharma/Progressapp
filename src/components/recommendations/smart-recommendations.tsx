@@ -23,7 +23,15 @@ function isMathSubject(name: string): name is MathSubject {
   return MATH_SUBJECTS.includes(name as MathSubject);
 }
 
-function filterPriorityFocusSubjects(subjects: Array<{ subject: SubjectWithRelations; learningProgress: number }>) {
+interface SubjectRecommendation {
+  subject: SubjectWithRelations & { isMathSubject?: boolean };
+  learningProgress: number;
+  revisionProgress: number;
+  testProgress: number;
+  weightage: number;
+}
+
+function filterPriorityFocusSubjects(subjects: SubjectRecommendation[]) {
   const mathSubjects = subjects.filter(({ subject, learningProgress }) =>
     isMathSubject(subject.name) &&
     learningProgress > 0 &&
@@ -39,10 +47,29 @@ function filterPriorityFocusSubjects(subjects: Array<{ subject: SubjectWithRelat
   const sortedMathSubjects = mathSubjects.sort((a, b) => b.learningProgress - a.learningProgress);
   const sortedNonMathSubjects = nonMathSubjects.sort((a, b) => b.learningProgress - a.learningProgress);
 
-  const selectedNonMath = sortedNonMathSubjects.slice(0, 2);
-  const selectedMath = sortedMathSubjects.slice(0, 1);
+  if (sortedMathSubjects.length > 0) {
+    const selectedNonMath = sortedNonMathSubjects.slice(0, 2);
+    const selectedMath = sortedMathSubjects.slice(0, 1);
+    return [...selectedNonMath, ...selectedMath];
+  } else {
+    return sortedNonMathSubjects.slice(0, 3);
+  }
+}
 
-  return [...selectedNonMath, ...selectedMath];
+function filterRevisionSubjects(subjects: SubjectRecommendation[]) {
+  return subjects
+    .sort((a, b) => {
+      const weightageA = a.weightage;
+      const weightageB = b.weightage;
+      const revisionProgressA = a.revisionProgress;
+      const revisionProgressB = b.revisionProgress;
+
+      const scoreA = (weightageA * (100 - revisionProgressA)) / 100;
+      const scoreB = (weightageB * (100 - revisionProgressB)) / 100;
+
+      return scoreB - scoreA;
+    })
+    .slice(0, 3);
 }
 
 export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
@@ -54,9 +81,9 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   const touchStartRef = useRef(0);
   const touchEndRef = useRef(0);
 
-  const reviseSubjects = recommendations.revise.slice(0, 3);
+  const reviseSubjects = filterRevisionSubjects(recommendations.revise);
   const priorityFocusSubjects = filterPriorityFocusSubjects(recommendations.priorityFocus);
-  const startNextSubjects = recommendations.startNext.slice(0, 3);
+  const testProgressSubjects = recommendations.testProgress;
 
   const sections = [
     {
@@ -103,20 +130,20 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
           </div>
         </div>
       ),
-      subjects: priorityFocusSubjects.map(({ subject, learningProgress }, index) => ({
+      subjects: priorityFocusSubjects.map(({ subject, learningProgress }) => ({
         subject,
         progress: learningProgress,
         variant: "blue",
         behindTarget: undefined,
-        status: index === 2 ? "Math Subject - Focus Required" : "Complete it at Priority",
-        statusColor: index === 2 ? "text-red-600" : "text-blue-500",
+        status: subject.isMathSubject ? "Math Subject - Focus Required" : "Complete it at Priority",
+        statusColor: subject.isMathSubject ? "text-red-600" : "text-blue-500",
         cardClassName: cn(
           "bg-white/80 dark:bg-blue-900/60 hover:bg-blue-50/90 dark:hover:bg-blue-800/80",
-          index === 2 && "border-t-2 border-blue-200 dark:border-blue-800 pt-2"
+          subject.isMathSubject && "border-t-2 border-blue-200 dark:border-blue-800 pt-2"
         )
       }))
     },
-    ...(startNextSubjects.length > 0 ? [{
+    ...(recommendations.startNext.length > 0 ? [{
       title: "Start Next",
       icon: <Rocket className="h-5 w-5 text-amber-500" />,
       description: `Recommended subjects to start based on ${session?.user?.examName || "exam"} weightage`,
@@ -133,7 +160,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
           </div>
         </div>
       ),
-      subjects: startNextSubjects.map(({ subject }) => ({
+      subjects: recommendations.startNext.map(({ subject }) => ({
         subject,
         progress: 0,
         variant: "amber",
@@ -152,18 +179,18 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
           <Target className="h-12 w-12 text-purple-500 opacity-50" />
           <p className="text-lg font-semibold">Time to Test Your Knowledge! 📝</p>
           <div className="text-center space-y-2">
-            <p>You&apos;ve haven&apos;t taken any tests yet.</p>
+            <p>You haven&apos;t taken any tests yet.</p>
             <p className="text-sm text-muted-foreground">
               Start taking tests to measure your understanding and track your progress.
             </p>
           </div>
         </div>
       ),
-      subjects: subjects.map(subject => ({
+      subjects: testProgressSubjects.map(({ subject, testProgress }) => ({
         subject,
-        progress: subject.testProgress || 0,
+        progress: testProgress,
         variant: "purple",
-        status: "Take a test",
+        status: testProgress === 0 ? "Start your first test" : "Take more tests",
         statusColor: "text-purple-500",
         cardClassName: "bg-white/80 dark:bg-purple-900/60 hover:bg-purple-50/90 dark:hover:bg-purple-800/80",
         behindTarget: undefined
@@ -248,7 +275,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               emptyMessage={section.emptyMessage}
               isEmpty={section.subjects.length === 0}
             >
-              <div className="space-y-4">
+              <div className="space-y-2">
                 {section.subjects.map((subjectData) => (
                   <SubjectCard
                     key={subjectData.subject.id}
