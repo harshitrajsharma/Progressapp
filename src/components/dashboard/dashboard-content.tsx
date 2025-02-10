@@ -11,7 +11,6 @@ import { calculateDashboardProgress } from "@/lib/calculations/dashboard-progres
 import { calculateExamFoundation } from "@/lib/calculations/exam-foundation";
 import { calculateSubjectProgress } from "@/lib/calculations";
 import { Target } from "lucide-react";
-import { useState } from "react";
 import { Category } from "@/types/progress";
 import { CategoryView } from "./category-view";
 import { ProgressCard } from "./progress-card";
@@ -32,7 +31,6 @@ interface DashboardContentProps {
 export function DashboardContent({ user }: DashboardContentProps) {
     const progress = calculateDashboardProgress(user.subjects);
     const foundationResult = calculateExamFoundation(user.subjects);
-    const [selectedCategory, setSelectedCategory] = useState<Category>('overall');
 
     // Calculate completed subjects
     const completedSubjects = user.subjects.filter(subject => {
@@ -174,9 +172,6 @@ export function DashboardContent({ user }: DashboardContentProps) {
                                     <div className="space-y-4 rounded-lg">
                                         <CategoryView
                                             subjects={user.subjects}
-                                            isExpanded={true}
-                                            selectedCategory={selectedCategory}
-                                            onCategorySelect={setSelectedCategory}
                                             getProgressValue={getProgressValue}
                                             className=" md:hidden"
                                         />
@@ -200,9 +195,6 @@ export function DashboardContent({ user }: DashboardContentProps) {
                         <div className="space-y-4 rounded-lg">
                             <CategoryView
                                 subjects={user.subjects}
-                                isExpanded={true}
-                                selectedCategory={selectedCategory}
-                                onCategorySelect={setSelectedCategory}
                                 getProgressValue={getProgressValue}
                             />
                         </div>

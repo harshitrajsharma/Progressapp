@@ -1,36 +1,182 @@
-import { Card } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
-import { memo, useMemo } from "react"
-import { SubjectProgress } from "@/types/prisma/subject"
-import { cn } from "@/lib/utils"
+import React, { memo, useMemo } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Tooltip, 
+  TooltipContent, 
+  TooltipProvider, 
+  TooltipTrigger 
+} from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
+import { TrendingUp, TrendingDown } from "lucide-react";
 
-interface ProgressOverviewProps {
-  progress: SubjectProgress;
+interface ProgressStats {
+  completedTopics: number;
+  totalTopics: number;
 }
 
-interface CategoryProgress {
+interface SubjectProgress {
+  overall: number;
+  learning: number;
+  revision: number;
+  practice: number;
+  test: number;
+  stats: {
+    learning: ProgressStats;
+    revision: ProgressStats;
+    practice: ProgressStats;
+    test: ProgressStats;
+  };
+}
+
+interface CategoryProgressData {
   value: number;
   completedTopics: number;
   totalTopics: number;
-  color: "blue" | "green" | "amber" | "purple";
 }
 
-const colorMap = {
-  blue: "text-blue-500",
-  green: "text-green-500",
-  amber: "text-amber-500",
-  purple: "text-purple-500"
-} as const;
+interface CategoryProgressProps {
+  title: string;
+  data: CategoryProgressData;
+  variant: keyof typeof progressVariants;
+  previousValue?: number;
+}
 
-const bgColorMap = {
-  blue: "bg-blue-500",
-  green: "bg-green-500",
-  amber: "bg-amber-500",
-  purple: "bg-purple-500"
-} as const;
+const progressVariants = {
+  learning: {
+    low: "bg-red-500/90",
+    medium: "bg-yellow-500/90",
+    high: "bg-blue-500/90",
+    text: "text-blue-500",
+    badge: "bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300",
+    hover: "group-hover:bg-blue-500/95"
+  },
+  revision: {
+    low: "bg-red-500/90",
+    medium: "bg-yellow-500/90",
+    high: "bg-green-500/90",
+    text: "text-green-500",
+    badge: "bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900 dark:text-green-300",
+    hover: "group-hover:bg-green-500/95"
+  },
+  practice: {
+    low: "bg-red-500/90",
+    medium: "bg-yellow-500/90",
+    high: "bg-amber-500/90",
+    text: "text-amber-500",
+    badge: "bg-amber-100 text-amber-700 hover:bg-amber-200 dark:bg-amber-900 dark:text-amber-300",
+    hover: "group-hover:bg-amber-500/95"
+  },
+  test: {
+    low: "bg-red-500/90",
+    medium: "bg-yellow-500/90",
+    high: "bg-purple-500/90",
+    text: "text-purple-500",
+    badge: "bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300",
+    hover: "group-hover:bg-purple-500/95"
+  }
+};
 
-function ProgressOverviewComponent({ progress }: ProgressOverviewProps) {
-  // Pre-calculate all progress values with proper validation
+const CategoryProgress = memo(({ title, data, variant, previousValue }: CategoryProgressProps) => {
+  const theme = progressVariants[variant];
+  const progressColor = cn(
+    "h-1.5 transition-all duration-300 rounded-full",
+    data.value < 30 && theme.low,
+    data.value >= 30 && data.value < 70 && theme.medium,
+    data.value >= 70 && theme.high,
+    theme.hover
+  );
+
+  const progressDiff = previousValue !== undefined ? data.value - previousValue : 0;
+
+  return (
+    <div className="group space-y-1.5 rounded-lg p-2 transition-colors hover:bg-accent/40">
+      <div className="flex justify-between items-center">
+        <span className="text-sm font-medium">{title}</span>
+        <div className="flex items-center gap-2">
+          {progressDiff !== 0 && (
+            <div className="flex items-center gap-1">
+              {progressDiff > 0 ? (
+                <TrendingUp className="w-3 h-3 text-green-500" />
+              ) : (
+                <TrendingDown className="w-3 h-3 text-red-500" />
+              )}
+              <span className={cn(
+                "text-xs font-medium",
+                progressDiff > 0 ? "text-green-500" : "text-red-500"
+              )}>
+                {Math.abs(progressDiff)}%
+              </span>
+            </div>
+          )}
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge 
+                  variant="secondary" 
+                  className={cn(
+                    "text-xs font-normal transition-colors",
+                    theme.badge
+                  )}
+                >
+                  {data.completedTopics}/{data.totalTopics}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent side="top" className="text-xs">
+                <p>Completed {data.completedTopics} out of {data.totalTopics} topics</p>
+                {progressDiff !== 0 && (
+                  <p className="mt-1 text-muted-foreground">
+                    {progressDiff > 0 ? "Increased" : "Decreased"} by {Math.abs(progressDiff)}% from last week
+                  </p>
+                )}
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+      </div>
+
+      <div className="relative w-full h-1.5 bg-secondary rounded-full overflow-hidden">
+        {[25, 50, 75].map((milestone) => (
+          <div
+            key={milestone}
+            className="absolute top-0 bottom-0 w-px bg-background/50"
+            style={{ left: `${milestone}%` }}
+          />
+        ))}
+        <div 
+          className={progressColor}
+          style={{ 
+            width: `${data.value}%`,
+            transform: `translateX(${data.value === 0 ? '-100%' : '0'})`,
+          }}
+        />
+      </div>
+
+      <div className="flex justify-between items-center text-xs">
+        <span className={cn(
+          "font-medium transition-colors",
+          data.value >= 70 && theme.text
+        )}>
+          {data.value}% complete
+        </span>
+        {data.value < 100 && (
+          <span className="hidden md:block text-muted-foreground">
+            {100 - data.value}% remaining
+          </span>
+        )}
+      </div>
+    </div>
+  );
+});
+
+CategoryProgress.displayName = "CategoryProgress";
+
+interface ProgressOverviewProps {
+  progress: SubjectProgress;
+  previousProgress?: SubjectProgress;
+}
+
+const ProgressOverviewComponent = ({ progress, previousProgress }: ProgressOverviewProps) => {
   const progressData = useMemo(() => {
     const validateProgress = (value: number) => {
       if (isNaN(value) || value < 0) return 0;
@@ -38,132 +184,125 @@ function ProgressOverviewComponent({ progress }: ProgressOverviewProps) {
       return Math.round(value);
     };
 
-    const validateTopics = (completed: number, total: number) => ({
-      completed: Math.max(0, completed),
-      total: Math.max(0, total || 0)
-    });
-
-    // Get validated stats
-    const learningStats = validateTopics(progress.stats.learning.completedTopics, progress.stats.learning.totalTopics);
-    const revisionStats = validateTopics(progress.stats.revision.completedTopics, progress.stats.revision.totalTopics);
-    const practiceStats = validateTopics(progress.stats.practice.completedTopics, progress.stats.practice.totalTopics);
-    const testStats = validateTopics(progress.stats.test.completedTopics, progress.stats.test.totalTopics);
-
     return {
       overall: validateProgress(progress.overall),
+      previousOverall: previousProgress?.overall ? validateProgress(previousProgress.overall) : undefined,
       categories: {
         learning: {
           value: validateProgress(progress.learning),
-          completedTopics: learningStats.completed,
-          totalTopics: learningStats.total,
-          color: "blue" as const
+          previousValue: previousProgress?.learning ? validateProgress(previousProgress.learning) : undefined,
+          completedTopics: progress.stats.learning.completedTopics,
+          totalTopics: progress.stats.learning.totalTopics
         },
         revision: {
           value: validateProgress(progress.revision),
-          completedTopics: revisionStats.completed,
-          totalTopics: revisionStats.total,
-          color: "green" as const
+          previousValue: previousProgress?.revision ? validateProgress(previousProgress.revision) : undefined,
+          completedTopics: progress.stats.revision.completedTopics,
+          totalTopics: progress.stats.revision.totalTopics
         },
         practice: {
           value: validateProgress(progress.practice),
-          completedTopics: practiceStats.completed,
-          totalTopics: practiceStats.total,
-          color: "amber" as const
+          previousValue: previousProgress?.practice ? validateProgress(previousProgress.practice) : undefined,
+          completedTopics: progress.stats.practice.completedTopics,
+          totalTopics: progress.stats.practice.totalTopics
         },
         test: {
           value: validateProgress(progress.test),
-          completedTopics: testStats.completed,
-          totalTopics: testStats.total,
-          color: "purple" as const
+          previousValue: previousProgress?.test ? validateProgress(previousProgress.test) : undefined,
+          completedTopics: progress.stats.test.completedTopics,
+          totalTopics: progress.stats.test.totalTopics
         }
       }
     };
-  }, [
-    progress.overall,
-    progress.learning,
-    progress.revision,
-    progress.practice,
-    progress.test,
-    progress.stats.learning.completedTopics,
-    progress.stats.learning.totalTopics,
-    progress.stats.revision.completedTopics,
-    progress.stats.revision.totalTopics,
-    progress.stats.practice.completedTopics,
-    progress.stats.practice.totalTopics,
-    progress.stats.test.completedTopics,
-    progress.stats.test.totalTopics
-  ]);
+  }, [progress, previousProgress]);
 
-  // Component for rendering individual category progress
-  const CategoryProgressDisplay = memo(({ 
-    title, 
-    data 
-  }: { 
-    title: string; 
-    data: CategoryProgress 
-  }) => (
-    <div className="space-y-1.5">
-      <div className="flex justify-between items-baseline">
-        <div>
-          <span className="text-sm">{title}</span>
-          <p className="text-[10px] text-muted-foreground">
-            {data.completedTopics}/{data.totalTopics}
-          </p>
-        </div>
-        <span className={cn("text-sm font-medium", colorMap[data.color])}>
-          {data.value}%
-        </span>
-      </div>
-      <Progress 
-        value={data.value} 
-        className="h-1.5"
-        indicatorClassName={bgColorMap[data.color]}
-      />
-    </div>
-  ));
+  const overallProgressColor = cn(
+    "h-2 transition-all duration-300 rounded-full",
+    progressData.overall < 30 && "bg-red-500/90",
+    progressData.overall >= 30 && progressData.overall < 70 && "bg-yellow-500/90",
+    progressData.overall >= 70 && "bg-blue-500/90",
+    "group-hover:bg-opacity-95"
+  );
 
-  // Set display name for the memoized component
-  CategoryProgressDisplay.displayName = 'CategoryProgressDisplay';
+  const overallDiff = progressData.previousOverall !== undefined 
+    ? progressData.overall - progressData.previousOverall 
+    : 0;
 
   return (
-    <Card className="p-4 rounded-xl border-2">
+    <Card className="p-4 rounded-xl">
       <div className="space-y-4">
-        {/* Overall Progress */}
-        <div className="space-y-1.5">
+        <div className="group space-y-2">
           <div className="flex justify-between items-center">
-            <span className="font-medium text-sm">Overall Progress</span>
-            <span className="text-sm text-muted-foreground">{progressData.overall}%</span>
+            <h2 className="text-sm font-medium">Overall Progress</h2>
+            <div className="flex items-center gap-2">
+              {overallDiff !== 0 && (
+                <div className="flex items-center gap-1">
+                  {overallDiff > 0 ? (
+                    <TrendingUp className="w-3 h-3 text-green-500" />
+                  ) : (
+                    <TrendingDown className="w-3 h-3 text-red-500" />
+                  )}
+                  <span className={cn(
+                    "text-xs font-medium",
+                    overallDiff > 0 ? "text-green-500" : "text-red-500"
+                  )}>
+                    {Math.abs(overallDiff)}%
+                  </span>
+                </div>
+              )}
+              <span className="text-sm font-medium">
+                {progressData.overall}%
+              </span>
+            </div>
           </div>
-          <Progress 
-            value={progressData.overall} 
-            className="h-2"
-            indicatorClassName="bg-red-500"
-          />
+
+          <div className="relative w-full h-2 bg-secondary rounded-full overflow-hidden">
+            {[25, 50, 75].map((milestone) => (
+              <div
+                key={milestone}
+                className="absolute top-0 bottom-0 w-px bg-background/50"
+                style={{ left: `${milestone}%` }}
+              />
+            ))}
+            <div 
+              className={overallProgressColor} 
+              style={{ 
+                width: `${progressData.overall}%`,
+                transform: `translateX(${progressData.overall === 0 ? '-100%' : '0'})`,
+              }} 
+            />
+          </div>
         </div>
 
-        {/* Progress Grid */}
-        <div className="grid grid-cols-2 gap-3">
-          <CategoryProgressDisplay 
+        <div className="grid grid-cols-2 gap-2">
+          <CategoryProgress 
             title="Learning" 
-            data={progressData.categories.learning} 
+            data={progressData.categories.learning}
+            variant="learning"
+            previousValue={progressData.categories.learning.previousValue}
           />
-          <CategoryProgressDisplay 
+          <CategoryProgress 
             title="Revision" 
-            data={progressData.categories.revision} 
+            data={progressData.categories.revision}
+            variant="revision"
+            previousValue={progressData.categories.revision.previousValue}
           />
-          <CategoryProgressDisplay 
+          <CategoryProgress 
             title="Practice" 
-            data={progressData.categories.practice} 
+            data={progressData.categories.practice}
+            variant="practice"
+            previousValue={progressData.categories.practice.previousValue}
           />
-          <CategoryProgressDisplay 
+          <CategoryProgress 
             title="Test" 
-            data={progressData.categories.test} 
+            data={progressData.categories.test}
+            variant="test"
+            previousValue={progressData.categories.test.previousValue}
           />
         </div>
       </div>
     </Card>
   );
-}
+};
 
-// Export with optimized memoization
-export const ProgressOverview = memo(ProgressOverviewComponent); 
+export const ProgressOverview = memo(ProgressOverviewComponent);

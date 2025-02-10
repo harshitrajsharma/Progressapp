@@ -8,14 +8,14 @@ import { cn } from "@/lib/utils";
 import { calculateSubjectProgress } from "@/lib/calculations";
 import type { SubjectWithRelations } from "@/lib/calculations/types";
 import { Badge } from "@/components/ui/badge";
-import { Pencil, Trash2, Check, AlertCircle } from "lucide-react";
+import { Pencil, Trash2, Check, AlertCircle, Book, Target } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EditSubjectDialog } from "@/components/subjects/edit-subject-dialog";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useSubjects } from "@/hooks/use-subjects";
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import { useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 type SubjectCategory = 'not-started' | 'in-progress' | 'completed';
 
@@ -28,6 +28,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
   const { toast } = useToast();
   const { revalidateSubjects } = useSubjects();
 
@@ -38,31 +39,60 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: subject.id })
+  } = useSortable({ id: subject.id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
-    transition,
+    transition: transition || 'transform 0.2s ease',
     opacity: isDragging ? 0.5 : 1,
     position: 'relative' as const,
-    zIndex: isDragging ? 50 : 0,
-  }
+    zIndex: isDragging ? 50 : isHovered ? 10 : 0,
+  };
 
   const totalTopics = subject.chapters.reduce(
     (acc, chapter) => acc + chapter.topics.length,
     0
   );
 
-  // Use centralized calculation logic
   const progress = calculateSubjectProgress(subject);
   const learningProgress = Math.round(progress.learning);
   const revisionProgress = Math.round(progress.revision);
   const practiceProgress = Math.round(progress.practice);
   const testProgress = Math.round(progress.test);
   const overallProgress = Math.round(progress.overall);
-  
- 
   const foundationLevel = progress.foundationLevel;
+
+  // Foundation level color mapping
+  const getFoundationLevelColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'beginner': return 'text-violet-500';
+      case 'moderate': return 'text-orange-500';
+      case 'advanced': return 'text-rose-500';
+      default: return 'text-zinc-500';
+    }
+  };
+  
+  // Foundation level BG color mapping
+  const getFoundationLevelBG = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'beginner': return 'bg-violet-500';
+      case 'moderate': return 'bg-orange-500';
+      case 'advanced': return 'bg-rose-500';
+      default: return 'bg-zinc-500';
+    }
+  };
+
+  const categoryColors = {
+    'not-started': 'bg-red-500/10 text-red-500',
+    'in-progress': 'bg-blue-500/10 text-blue-500',
+    'completed': 'bg-green-500/10 text-green-500'
+  } as const;
+
+  const categoryBg = {
+    'not-started': 'hover:bg-red-500/10 bg-red-500/[0.03]',
+    'in-progress': 'hover:bg-blue-500/10 bg-blue-500/[0.03]',
+    'completed': 'hover:bg-green-500/10 bg-green-500/[0.03]'
+  } as const;
 
   const handleEdit = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
@@ -81,31 +111,22 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
         method: 'DELETE',
       });
 
-      if (response.ok) {
-        toast({
-          description: (
-            <div className="flex gap-2 items-center">
-              <Check className="h-4 w-4 text-green-500" />
-              <span>Subject deleted successfully</span>
-            </div>
-          ),
-          variant: "default",
-          className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
-          duration: 3000,
-        });
+      if (!response.ok) throw new Error(await response.text());
 
-        setDeleteDialogOpen(false);
-        await revalidateSubjects();
-      } else {
-        let errorMessage = 'Failed to delete subject';
-        try {
-          const errorData = await response.json();
-          errorMessage = errorData.message || errorMessage;
-        } catch {
-          errorMessage = response.statusText || errorMessage;
-        }
-        throw new Error(errorMessage);
-      }
+      toast({
+        description: (
+          <div className="flex gap-2 items-center">
+            <Check className="h-4 w-4 text-green-500" />
+            <span>Subject deleted successfully</span>
+          </div>
+        ),
+        variant: "default",
+        className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+        duration: 3000,
+      });
+
+      setDeleteDialogOpen(false);
+      await revalidateSubjects();
     } catch (error) {
       console.error('Error deleting subject:', error);
       toast({
@@ -128,196 +149,153 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     revalidateSubjects();
   }, [revalidateSubjects]);
 
-  const categoryColors = {
-    'not-started': 'bg-red-500/10 text-red-500',
-    'in-progress': 'bg-blue-500/10 text-blue-500',
-    'completed': 'bg-green-500/10 text-green-500'
-  } as const;
-
-  const categoryBg = {
-    'not-started': 'hover:bg-red-500/10 bg-red-500/[0.03]',
-    'in-progress': 'hover:bg-blue-500/10 bg-blue-500/[0.03]',
-    'completed': 'hover:bg-green-500/10 bg-green-500/[0.03]'
-  } as const;
-
   return (
-    <div 
+    <div
       ref={setNodeRef}
       style={style}
       {...attributes}
       {...listeners}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        "group relative hover:scale-105 transition-all duration-1000 ",
+        "group relative transform-gpu transition-all duration-300",
+        isHovered && "scale-[1.02]",
         isDragging && "ring-2 ring-primary shadow-lg cursor-grabbing",
         !isDragging && "cursor-grab"
       )}
     >
-      <Link 
+      <Link
         href={`/subjects/${subject.id}`}
-        onClick={(e) => {
-          if (isDragging) {
-            e.preventDefault()
-            e.stopPropagation()
-          }
-        }}
+        onClick={(e) => isDragging && e.preventDefault()}
+        className="block"
       >
         <Card className={cn(
-          "p-3 sm:p-4 hover:shadow-md transition-all relative",
+          "p-4 transition-all relative",
           categoryBg[category],
           isDragging && "shadow-xl"
         )}>
-          {/* Action Buttons - Show on hover */}
-          <div className="absolute top-2 right-2 z-20 opacity-0 group-hover:opacity-100 transition-opacity">
-            <div className="flex gap-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 bg-white dark:bg-background border text-muted-foreground hover:text-foreground"
-                onClick={handleEdit}
-              >
-                <Pencil className="h-3 w-3" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-6 w-6 bg-white dark:bg-background border text-muted-foreground hover:text-destructive"
-                onClick={handleDelete}
-              >
-                <Trash2 className="h-3 w-3" />
-              </Button>
-            </div>
+          {/* Action Buttons */}
+          <div className="absolute top-3 right-3 z-20 flex gap-1.5 opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+              onClick={handleEdit}
+            >
+              <Pencil className="h-4 w-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
           </div>
 
-          <div className="space-y-3 sm:space-y-4">
-            {/* Header */}
-            <div className="space-y-2 sm:space-y-3">
-              {/* Subject Name and Progress Badge */}
-              <div className="flex items-center justify-between">
-                <h2 className="text-lg sm:text-xl font-bold text-foreground">{subject.name}</h2>
-                <Badge 
+          <div className="space-y-4">
+            {/* Header Section */}
+            <div className="space-y-3">
+              <div className="flex items-start justify-between gap-4">
+                <h2 className="text-xl font-bold text-foreground leading-tight">{subject.name}</h2>
+                <Badge
                   className={cn(
-                    "text-xs font-medium px-1.5 sm:px-2 py-0.5",
+                    "px-2 py-1 text-xs font-medium",
                     categoryColors[category]
                   )}
                 >
                   {learningProgress}%
                 </Badge>
               </div>
-              
-              {/* Subject Info */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm text-muted-foreground">
-                  <span>{subject.chapters.length} chapters</span>
-                  <span>•</span>
-                  <span>{totalTopics} topics</span>
+
+              <div className="flex items-center justify-between text-sm">
+                <div className="flex items-center gap-3 text-muted-foreground">
+                  <div className="flex items-center gap-1.5">
+                    <Book className="h-4 w-4" />
+                    <span>{subject.chapters.length} chapters</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Target className="h-4 w-4" />
+                    <span>{totalTopics} topics</span>
+                  </div>
                 </div>
-                <Badge variant="secondary" className=" text-[10px] sm:text-xs font-normal">
+                <Badge variant="secondary" className="text-xs font-normal">
                   {subject.weightage} marks
                 </Badge>
               </div>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-2 gap-3 sm:gap-4">
-              {/* Subject Weightage */}
-              <div className="relative bg-background dark:bg-background rounded-lg sm:rounded-xl overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-green-500" />
-                <div className="p-2 sm:p-2.5">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">subject weightage </p>
-                  <p className="text-base sm:text-lg font-semibold text-green-500 mt-0.5">
-                    {subject.weightage} Marks
-                  </p>
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 gap-3">
+
+              <div className="relative bg-background dark:bg-background rounded-lg overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" />
+                <div className="p-2.5">
+                  <p className="text-xs text-muted-foreground tracking-wider uppercase">Weightage</p>
+                  <p className="text-lg font-semibold mt-0.5 text-green-500">{subject.weightage} Marks</p>
                 </div>
               </div>
 
-              {/* Foundation Level */}
-              <div className="relative bg-background dark:bg-background rounded-lg sm:rounded-xl overflow-hidden">
-                <div className="absolute left-0 top-0 bottom-0 w-0.5 sm:w-1 bg-orange-500" />
-                <div className="p-2 sm:p-2.5">
-                  <p className="text-[10px] sm:text-xs text-muted-foreground tracking-wider uppercase">Foundation</p>
-                  <p className="text-base sm:text-lg font-semibold text-orange-500 mt-0.5">
-                    {foundationLevel}
-                  </p>
+              <div className="relative bg-background dark:bg-background rounded-lg overflow-hidden">
+                <div className={cn("absolute left-0 top-0 bottom-0 w-1", getFoundationLevelBG(foundationLevel) )} />
+                <div className="p-2.5">
+                  <p className="text-xs text-muted-foreground tracking-wider uppercase">Foundation</p>
+                  <p className={cn(
+                    "text-lg font-semibold mt-0.5",
+                    getFoundationLevelColor(foundationLevel)
+                  )}>{foundationLevel}</p>
                 </div>
               </div>
+
             </div>
 
             {/* Progress Section */}
-            <div className="space-y-2 sm:space-y-3">
-              {/* Overall Progress */}
-              <div className="space-y-1 sm:space-y-1.5">
-                <div className="flex justify-between items-center text-xs sm:text-sm">
-                  <span className="text-muted-foreground">Overall Progress</span>
-                  <span className="font-medium">{overallProgress}%</span>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-muted-foreground font-medium">Overall Progress</span>
+                  <span className="font-semibold">{overallProgress}%</span>
                 </div>
-                <Progress 
-                  value={overallProgress} 
-                  className="h-1.5 sm:h-2 bg-secondary/50 dark:bg-secondary/25" 
-                  indicatorClassName="bg-primary"
+                <Progress
+                  value={overallProgress}
+                  className="h-2 bg-secondary/50"
+                  indicatorClassName="bg-white dark:bg-white"
                 />
               </div>
 
-              {/* Detailed Progress */}
-              <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                <div className="space-y-0.5 sm:space-y-1">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Learning</span>
-                    <span>{learningProgress}%</span>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: "Learning", value: learningProgress, color: "bg-blue-500" },
+                  { label: "Revision", value: revisionProgress, color: "bg-green-500" },
+                  { label: "Practice", value: practiceProgress, color: "bg-amber-500" },
+                  { label: "Test", value: testProgress, color: "bg-purple-500" }
+                ].map((item) => (
+                  <div key={item.label} className="space-y-1">
+                    <div className="flex justify-between text-xs text-muted-foreground">
+                      <span>{item.label}</span>
+                      <span>{item.value}%</span>
+                    </div>
+                    <Progress
+                      value={item.value}
+                      className="h-1.5 bg-secondary/50"
+                      indicatorClassName={item.color}
+                    />
                   </div>
-                  <Progress 
-                    value={learningProgress} 
-                    className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
-                    indicatorClassName="bg-blue-500"
-                  />
-                </div>
-                <div className="space-y-0.5 sm:space-y-1">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Revision</span>
-                    <span>{revisionProgress}%</span>
-                  </div>
-                  <Progress 
-                    value={revisionProgress} 
-                    className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
-                    indicatorClassName="bg-green-500"
-                  />
-                </div>
-                <div className="space-y-0.5 sm:space-y-1">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Practice</span>
-                    <span>{practiceProgress}%</span>
-                  </div>
-                  <Progress 
-                    value={practiceProgress} 
-                    className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
-                    indicatorClassName="bg-yellow-500"
-                  />
-                </div>
-                <div className="space-y-0.5 sm:space-y-1">
-                  <div className="flex justify-between text-[10px] text-muted-foreground">
-                    <span>Test</span>
-                    <span>{testProgress}%</span>
-                  </div>
-                  <Progress 
-                    value={testProgress} 
-                    className="h-1 sm:h-1.5 bg-secondary/50 dark:bg-secondary/25" 
-                    indicatorClassName="bg-purple-500"
-                  />
-                </div>
+                ))}
               </div>
             </div>
           </div>
         </Card>
       </Link>
 
-      {/* Edit Dialog */}
-      <EditSubjectDialog 
+      <EditSubjectDialog
         subject={subject}
         open={editDialogOpen}
         onOpenChange={setEditDialogOpen}
         onSuccess={handleEditSuccess}
       />
 
-      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
         open={deleteDialogOpen}
         onOpenChange={setDeleteDialogOpen}
@@ -332,4 +310,4 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
   );
 }
 
-export const SubjectCard = memo(SubjectCardComponent); 
+export const SubjectCard = memo(SubjectCardComponent);

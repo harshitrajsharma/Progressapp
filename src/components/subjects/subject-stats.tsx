@@ -15,6 +15,25 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
     [subject]
   );
 
+  // Foundation level color mapping
+  const getFoundationLevelColor = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'beginner': return 'text-violet-500';
+      case 'moderate': return 'text-orange-500';
+      case 'advanced': return 'text-rose-500';
+      default: return 'text-zinc-500';
+    }
+  };
+  // Foundation level color mapping
+  const getFoundationLevelBG = (level: string) => {
+    switch (level.toLowerCase()) {
+      case 'beginner': return 'bg-violet-500';
+      case 'moderate': return 'bg-orange-500';
+      case 'advanced': return 'bg-rose-500';
+      default: return 'bg-zinc-500';
+    }
+  };
+
   // Calculate completed chapters based on learning progress
   const completedChapters = useMemo(() => {
     return subject.chapters.filter(chapter => {
@@ -26,7 +45,7 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
   }, [subject.chapters]);
 
   return (
-    <div className="grid gap-4 grid-cols-2">
+    <div className="grid gap-4 h-full grid-cols-2">
       {/* Expected Marks */}
       <StatCard 
         label="Expected Marks"
@@ -35,6 +54,7 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
         icon={Info}
         tooltipText="Based on your test performance"
         valueColor="text-red-500"
+        bgColor="bg-red-500"
       />
 
       {/* Foundation Level */}
@@ -43,7 +63,8 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
         value={progress.foundationLevel}
         icon={GraduationCap}
         iconColor="text-orange-500"
-        valueColor="text-orange-500"
+        bgColor={getFoundationLevelBG(progress.foundationLevel)}
+        valueColor={getFoundationLevelColor(progress.foundationLevel)}
         tooltipText="Based on your overall progress with emphasis on learning phase"
       />
 
@@ -53,6 +74,7 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
         value={`${progress.stats.learning.completedTopics}/${progress.stats.learning.totalTopics}`}
         icon={BookOpen}
         iconColor="text-blue-500"
+        bgColor="bg-blue-500"
         valueColor="text-blue-500"
         tooltipText="Number of topics completed in learning phase"
       />
@@ -63,6 +85,7 @@ function SubjectStatsComponent({ subject }: SubjectStatsProps) {
         value={`${completedChapters}/${subject.chapters.length}`}
         icon={LayoutList}
         iconColor="text-green-500"
+        bgColor="bg-green-500"
         valueColor="text-green-500"
         tooltipText="Chapters where all topics are completed in learning phase"
       />

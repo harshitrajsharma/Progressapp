@@ -16,6 +16,7 @@ function StatCardComponent({
   subValue,
   icon: Icon,
   iconColor = "text-muted-foreground",
+  bgColor = "text-muted-foreground",
   tooltipText,
   valueColor,
   className,
@@ -23,11 +24,12 @@ function StatCardComponent({
 }: StatCardProps) {
   return (
     <Card className={cn(
-      "p-4",
+      "p-4 relative overflow-hidden",
       variant === 'outline' && "border-2",
       className
     )}>
-      <div className="space-y-2">
+      <div className={cn("absolute left-0 top-0 bottom-0 w-1 ", bgColor )} />
+      <div className=" space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-sm text-muted-foreground">{label}</span>
           {tooltipText ? (

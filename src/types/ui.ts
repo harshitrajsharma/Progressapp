@@ -11,6 +11,7 @@ export interface StatCardProps extends CardProps {
   subValue?: string;
   icon?: LucideIcon;
   iconColor?: string;
+  bgColor?: string;
   tooltipText?: string;
   valueColor?: string;
   transitionDuration?: number;

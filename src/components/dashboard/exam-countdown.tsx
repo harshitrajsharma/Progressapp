@@ -23,17 +23,16 @@ export function ExamCountdown({
 
   const content = (
     <div className={cn(
-      "space-y-6",
+      "space-y-2",
       !isSidebar && "p-4 sm:p-6"
     )}>
       {/* Exam Countdown Display */}
       <div className={cn(
         "bg-green-900/10 rounded-lg",
-        isSidebar ? "p-2" : "p-3 sm:p-4"
+        isSidebar ? "" : "p-3 sm:p-4"
       )}>
         <ExamCountdownDisplay
           examDate={examDate}
-          variant={variant}
         />
       </div>
 

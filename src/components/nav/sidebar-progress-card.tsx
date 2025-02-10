@@ -24,11 +24,12 @@ export function SidebarProgressCard({
         return (
             <div className={cn(
                 "flex flex-col items-center justify-center p-2 relative",
+                "transition-all duration-200 ",
                 className
             )}>
                 <div className="relative">
                     <ChartPieIcon className="w-6 h-6 text-blue-500" />
-                    <div className="absolute -top-2 -right-2 bg-red-600 text-white text-sm font-semibold rounded-full px-1 min-w-[18px] h-[18px] flex items-center justify-center">
+                    <div className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full px-1.5 min-w-[20px] h-[20px] flex items-center justify-center">
                         {Math.round(progress.overall)}%
                     </div>
                 </div>
@@ -38,10 +39,11 @@ export function SidebarProgressCard({
 
     return (
         <div className={cn(
-            "space-y-3",
-            !isSidebar && "p-4 sm:p-6",
+            "space-y-4",
+            !isSidebar && "sm:p-6",
             className
         )}>
+
             <div className="space-y-2">
                 <ProgressIndicator
                     label="Overall"
@@ -78,4 +80,4 @@ export function SidebarProgressCard({
             </div>
         </div>
     );
-} 
+}
