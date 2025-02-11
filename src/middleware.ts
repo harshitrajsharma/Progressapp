@@ -5,6 +5,9 @@ export default withAuth(
   async function middleware(req) {
     // If it's the landing page and user is authenticated, redirect to dashboard
     if (req.nextUrl.pathname === "/" && req.nextauth.token) {
+      if (req.nextauth.token.needsOnboarding) {
+        return NextResponse.redirect(new URL("/onboarding", req.url));
+      }
       return NextResponse.redirect(new URL("/dashboard", req.url));
     }
 
