@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CalendarView } from "@/components/analytics/CalendarView";
+import StudyTimelineSkeleton from '../../../components/skeletons/studytimeline-skeleton';
 
 // Function to fetch exam date
 async function fetchExamDate(): Promise<Date | null> {
@@ -24,7 +25,11 @@ export default function AnalyticsPage() {
     gcTime: Infinity,
   });
 
-  if (isLoading) return null;
+  if (isLoading) return (
+    <div className="w-full px-2 sm:px-4">
+      <StudyTimelineSkeleton />
+    </div>
+  );
 
   return (
     <div className="space-y-8">

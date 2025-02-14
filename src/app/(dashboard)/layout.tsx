@@ -68,7 +68,7 @@ export default function DashboardLayout({
     <div className="flex relative h-screen overflow-hidden">
       {/* Grid Pattern */}
       <div
-          className="absolute -z-20 inset-0 bg-[linear-gradient(to_right,#5557e917_1px,transparent_1px),linear-gradient(to_bottom,#80808015_1px,transparent_1px)] bg-[size:32px_32px]"
+          className="absolute -z-20 inset-0 bg-[linear-gradient(to_right,#5557e917_1px,transparent_1px),linear-gradient(to_bottom,#5557e917_1px,transparent_1px)] bg-[size:32px_32px]"
           style={{
             maskImage: 'radial-gradient(circle at center, black, transparent)',
             WebkitMaskImage: 'radial-gradient(circle at center, black, transparent)'

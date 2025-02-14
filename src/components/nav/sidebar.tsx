@@ -58,10 +58,16 @@ const NavigationLink = React.memo(({
 
 NavigationLink.displayName = 'NavigationLink';
 
+interface DailyActivity {
+  id: string;
+  date: Date;
+}
+
 interface SidebarProps {
   isCollapsed: boolean;
   examDate: Date;
   subjects: SubjectWithRelations[];
+  dailyActivities?: DailyActivity[];
 }
 
 export function Sidebar({
