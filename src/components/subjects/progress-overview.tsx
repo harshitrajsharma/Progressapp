@@ -139,7 +139,7 @@ const CategoryProgress = memo(({ title, data, variant, previousValue }: Category
         {[25, 50, 75].map((milestone) => (
           <div
             key={milestone}
-            className="absolute top-0 bottom-0 w-px bg-background/50"
+            className="absolute top-0 bottom-0 w-px dark:bg-white/20 bg-black/20"
             style={{ left: `${milestone}%` }}
           />
         ))}
@@ -260,7 +260,7 @@ const ProgressOverviewComponent = ({ progress, previousProgress }: ProgressOverv
             {[25, 50, 75].map((milestone) => (
               <div
                 key={milestone}
-                className="absolute top-0 bottom-0 w-px bg-background/50"
+                className="absolute top-0 bottom-0 w-px bg-black/20 dark:bg-white/20"
                 style={{ left: `${milestone}%` }}
               />
             ))}
