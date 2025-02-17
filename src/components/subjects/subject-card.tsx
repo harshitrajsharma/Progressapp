@@ -62,7 +62,6 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
   const overallProgress = Math.round(progress.overall);
   const foundationLevel = progress.foundationLevel;
 
-  // Foundation level color mapping
   const getFoundationLevelColor = (level: string) => {
     switch (level.toLowerCase()) {
       case 'beginner': return 'text-violet-500';
@@ -72,7 +71,6 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
     }
   };
   
-  // Foundation level BG color mapping
   const getFoundationLevelBG = (level: string) => {
     switch (level.toLowerCase()) {
       case 'beginner': return 'bg-violet-500';
@@ -89,9 +87,9 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
   } as const;
 
   const categoryBg = {
-    'not-started': 'hover:bg-red-500/10 bg-red-500/[0.03]',
-    'in-progress': 'hover:bg-blue-500/10 bg-blue-500/[0.03]',
-    'completed': 'hover:bg-green-500/10 bg-green-500/[0.03]'
+    'not-started': 'hover:bg-red-500/5 bg-red-500/[0.02]',
+    'in-progress': 'hover:bg-blue-500/5 bg-blue-500/[0.02]',
+    'completed': 'hover:bg-green-500/5 bg-green-500/[0.02]'
   } as const;
 
   const handleEdit = useCallback((e: React.MouseEvent) => {
@@ -170,16 +168,19 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
         className="block"
       >
         <Card className={cn(
-          "p-4 transition-all relative",
+          "p-4 transition-all relative backdrop-blur-md border border-white/10",
           categoryBg[category],
-          isDragging && "shadow-xl"
+          isDragging && "shadow-xl",
+          "before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-white/10 before:dark:from-white/5 before:dark:to-black/20 before:rounded-lg",
+          "after:absolute after:inset-0 after:backdrop-blur-xl after:bg-white/30 after:dark:bg-black/30 after:rounded-lg after:opacity-10",
+          "hover:before:opacity-100 hover:after:opacity-20"
         )}>
           {/* Action Buttons */}
           <div className="absolute top-3 right-3 z-20 flex gap-1.5 opacity-0 transform translate-y-1 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-200">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-background"
+              className="h-8 w-8 bg-white/80 dark:bg-black/50 backdrop-blur-md hover:bg-white dark:hover:bg-black/70"
               onClick={handleEdit}
             >
               <Pencil className="h-4 w-4" />
@@ -187,21 +188,21 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 bg-background/80 backdrop-blur-sm hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500"
+              className="h-8 w-8 bg-white/80 dark:bg-black/50 backdrop-blur-md hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-500"
               onClick={handleDelete}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 relative z-10">
             {/* Header Section */}
             <div className="space-y-3">
               <div className="flex items-start justify-between gap-4">
                 <h2 className="text-xl font-bold text-foreground leading-tight">{subject.name}</h2>
                 <Badge
                   className={cn(
-                    "px-2 py-1 text-xs font-medium",
+                    "px-2 py-1 text-xs font-medium backdrop-blur-sm",
                     categoryColors[category]
                   )}
                 >
@@ -220,7 +221,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                     <span>{totalTopics} topics</span>
                   </div>
                 </div>
-                <Badge variant="secondary" className="text-xs font-normal">
+                <Badge variant="secondary" className="text-xs font-normal backdrop-blur-sm">
                   {subject.weightage} marks
                 </Badge>
               </div>
@@ -228,8 +229,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 gap-3">
-
-              <div className="relative bg-background dark:bg-background rounded-lg overflow-hidden">
+              <div className="relative bg-white/40 dark:bg-white/5 backdrop-blur-lg rounded-lg overflow-hidden">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-green-500" />
                 <div className="p-2.5">
                   <p className="text-xs text-muted-foreground tracking-wider uppercase">Weightage</p>
@@ -237,8 +237,8 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                 </div>
               </div>
 
-              <div className="relative bg-background dark:bg-background rounded-lg overflow-hidden">
-                <div className={cn("absolute left-0 top-0 bottom-0 w-1", getFoundationLevelBG(foundationLevel) )} />
+              <div className="relative bg-white/40 dark:bg-white/5 backdrop-blur-lg rounded-lg overflow-hidden">
+                <div className={cn("absolute left-0 top-0 bottom-0 w-1", getFoundationLevelBG(foundationLevel))} />
                 <div className="p-2.5">
                   <p className="text-xs text-muted-foreground tracking-wider uppercase">Foundation</p>
                   <p className={cn(
@@ -247,7 +247,6 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                   )}>{foundationLevel}</p>
                 </div>
               </div>
-
             </div>
 
             {/* Progress Section */}
@@ -260,7 +259,7 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
                 <Progress
                   value={overallProgress}
                   className="h-2 bg-secondary/50"
-                  indicatorClassName="bg-white dark:bg-white"
+                  indicatorClassName="bg-black dark:bg-white"
                 />
               </div>
 

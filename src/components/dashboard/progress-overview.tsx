@@ -14,7 +14,7 @@ interface DashboardProgressOverviewProps {
 
 export function DashboardProgressOverview({ progress, subjects }: DashboardProgressOverviewProps) {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState<Category>('overall');
+  // const [selectedCategory, setSelectedCategory] = useState<Category>('overall');
 
   const getProgressValue = (progress: ReturnType<typeof calculateSubjectProgress>, category: Category): number => {
     switch (category) {
@@ -34,13 +34,10 @@ export function DashboardProgressOverview({ progress, subjects }: DashboardProgr
         onToggleExpand={() => setIsExpanded(!isExpanded)}
       />
 
-      <CategoryView
+      { isExpanded && (<CategoryView
         subjects={subjects}
-        isExpanded={isExpanded}
-        selectedCategory={selectedCategory}
-        onCategorySelect={setSelectedCategory}
         getProgressValue={getProgressValue}
-      />
+      />)}
     </div>
   );
 } 
