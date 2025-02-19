@@ -162,7 +162,7 @@ export function ExamCountdownDisplay({
         <div className="flex justify-between items-baseline">
           <h3 
             className={cn(
-              "text-lg text-center w-full font-bold tracking-tight truncate", 
+              "text-2xl text-center w-full font-bold tracking-tight truncate", 
               countdownContext.color,
               countdownContext.stage === 'critical' ? "tabular-nums" : ""
             )}

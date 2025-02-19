@@ -30,7 +30,7 @@ export function ProgressIndicator({
       <Progress 
         value={value} 
         className={cn(
-          "bg-secondary/50",
+          "bg-black/10 dark:bg-secondary/50",
           size === 'sm' ? "h-1.5" : "h-2"
         )}
         indicatorClassName={config.progressColor}

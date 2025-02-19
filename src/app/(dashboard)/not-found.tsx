@@ -16,7 +16,7 @@ export default function DashboardNotFound() {
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold tracking-tight">Page Not Found</h2>
             <p className="text-sm text-muted-foreground">
-              Sorry, we couldn't find the dashboard page you're looking for.
+              Sorry, we couldn&apos;t find the dashboard page you&apos;re looking for.
             </p>
           </div>
           <div className="space-y-4">
