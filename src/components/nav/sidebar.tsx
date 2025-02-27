@@ -122,6 +122,7 @@ export function Sidebar({
   }, [toggleSidebar]);
 
   // Implement intelligent hover intent detection
+  /*
   useEffect(() => {
     if (!sidebarRef.current) return;
     
@@ -158,7 +159,8 @@ export function Sidebar({
       element.removeEventListener('mouseleave', handleMouseLeave);
       window.clearTimeout(hoverTimer);
     };
-  }, [isCollapsed, toggleSidebar]);
+  }, [isCollapsed, toggleSidebar]); 
+  */
 
   // Memoize navigation configurations
   const navigationItems = useMemo(() => [
