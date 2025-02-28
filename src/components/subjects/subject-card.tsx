@@ -171,8 +171,8 @@ function SubjectCardComponent({ subject, category = 'not-started' }: SubjectCard
           "p-4 transition-all relative backdrop-blur-md border border-white/10",
           categoryBg[category],
           isDragging && "shadow-xl",
-          "before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-white/10 before:dark:from-white/5 before:dark:to-black/20 before:rounded-lg",
-          "after:absolute after:inset-0 after:backdrop-blur-xl after:bg-white/30 after:dark:bg-black/30 after:rounded-lg after:opacity-10",
+          "before:absolute before:inset-0 before:bg-gradient-to-b before:from-white/5 before:to-black/10 before:dark:from-white/5 before:dark:to-black/20 before:rounded-lg",
+          "after:absolute after:inset-0 after:backdrop-blur-xl after:bg-black/30 after:dark:bg-black/30 after:rounded-lg after:opacity-10",
           "hover:before:opacity-100 hover:after:opacity-20"
         )}>
           {/* Action Buttons */}
