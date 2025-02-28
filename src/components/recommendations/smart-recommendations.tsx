@@ -255,7 +255,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               description={section.description}
               className={cn(
                 section.className,
-                "transition-transform hover:scale-[1.01] border border-white/20 shadow-lg"
+                "transition-transform border border-white/20 shadow-lg"
               )}
               emptyMessage={section.emptyMessage}
               isEmpty={section.subjects.length === 0}
