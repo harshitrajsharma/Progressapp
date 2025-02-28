@@ -405,7 +405,7 @@ export default function SubjectsPage() {
         </div>
 
         {/* Desktop: Inline Tabs with Search and Add Button */}
-        <div className="hidden sm:flex sm:items-center sm:justify-between sm:gap-3">
+        <div className="hidden md:flex md:items-center md:justify-between md:gap-3">
           <div className="flex flex-row space-x-3 overflow-x-auto sm:overflow-visible pb-2">
             {tabOptions.map((tab) => (
               <motion.button

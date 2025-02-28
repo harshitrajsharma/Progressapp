@@ -24,7 +24,7 @@ function StatCardComponent({
 }: StatCardProps) {
   return (
     <Card className={cn(
-      "p-4 relative",
+      "p-4 relative overflow-hidden",
       variant === 'outline' && "border-2",
       className
     )}>
