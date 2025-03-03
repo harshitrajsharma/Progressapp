@@ -443,7 +443,7 @@ export default function SubjectsPage() {
           </div>
         }
       >
-        <div className="pb-4 sm:pb-0">
+        <div className="pb-4 sm:pb-0 min-h-[700px] ">
           <SubjectsGrid searchQuery={searchQuery} activeTab={activeTab} />
         </div>
       </Suspense>

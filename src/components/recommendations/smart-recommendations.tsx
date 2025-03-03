@@ -35,6 +35,7 @@ function filterPriorityFocusSubjects(subjects: SubjectRecommendation[]) {
   const mathSubjects = subjects.filter(({ subject, learningProgress }) =>
     isMathSubject(subject.name) && learningProgress > 0 && learningProgress < 100
   );
+
   const nonMathSubjects = subjects.filter(({ subject, learningProgress }) =>
     !isMathSubject(subject.name) && learningProgress > 0 && learningProgress < 100
   );
@@ -95,7 +96,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         progress: revisionProgress,
         variant: "emerald",
         status: "Revise Now",
-        statusColor: "text-emerald-500",
+        statusColor: "text-amber-500",
         cardClassName: "bg-white/40 dark:bg-emerald-900/40 hover:bg-emerald-50/60 dark:hover:bg-emerald-800/60 backdrop-blur-sm",
         behindTarget: undefined
       }))
@@ -122,8 +123,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         progress: learningProgress,
         variant: "blue",
         behindTarget: undefined,
-        status: subject.isMathSubject ? "Math - Focus Required" : "Complete Soon",
-        statusColor: subject.isMathSubject ? "text-red-600" : "text-blue-500",
+        status: subject.isMathSubject ? "Math - Focus Required" : "Complete at Priority",
+        statusColor: subject.isMathSubject ? "text-red-600" : "text-emerald-500",
         cardClassName: cn(
           "bg-white/40 dark:bg-blue-900/40 hover:bg-blue-50/60 dark:hover:bg-blue-800/60 backdrop-blur-sm",
           subject.isMathSubject && "border-t-2 border-blue-200 dark:border-blue-800 pt-2"
@@ -151,8 +152,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         subject,
         progress: 0,
         variant: "amber",
-        status: "Start Soon",
-        statusColor: "text-orange-500",
+        status: "High Priority - Start Soon",
+        statusColor: "text-red-500",
         cardClassName: "bg-white/40 dark:bg-amber-900/40 hover:bg-amber-50/60 dark:hover:bg-amber-800/60 backdrop-blur-sm",
         behindTarget: undefined
       }))
@@ -177,7 +178,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         subject,
         progress: testProgress,
         variant: "purple",
-        status: testProgress === 0 ? "Start Testing" : "Take More Tests",
+        status: testProgress === 0 ? "Start Test" : "Take More Tests",
         statusColor: "text-purple-500",
         cardClassName: "bg-white/40 dark:bg-purple-900/40 hover:bg-purple-50/60 dark:hover:bg-purple-800/60 backdrop-blur-sm",
         behindTarget: undefined
@@ -244,8 +245,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex-1">
-            <div className="flex items-center gap-2">
-              <h1 className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-blue-400 via-violet-500 to-blue-500 bg-clip-text text-transparent animate-gradient">
+            <div className="flex items-center justify-between gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold ">
                 Smart Recommendations
               </h1>
               <Sparkles className="h-5 sm:h-6 w-5 sm:w-6 text-blue-500 animate-pulse" />

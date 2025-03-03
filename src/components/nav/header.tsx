@@ -20,8 +20,8 @@ export function Header({ children }: HeaderProps) {
           <div className="flex items-center gap-4">
             {children}
             <div className="flex items-center gap-3">
-              <div className="flex items-center gap-2 bg-black/5 px-3 py-1.5 rounded-lg">
-                <Calendar className="h-4 w-4  text-blue-500" />
+              <div className="flex items-center gap-2 bg-blue-500/10 px-3 py-1.5 rounded-lg">
+                <Calendar className="h-4 w-4 md:h-6 md:w-6  text-blue-500" />
                 <span className="text-sm font-medium bg-gradient-to-r from-blue-500 to-blue-700 bg-clip-text text-transparent">
                   {currentDate}
                 </span>

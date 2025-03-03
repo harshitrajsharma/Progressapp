@@ -39,7 +39,7 @@ export function SubjectCard({
   const roundedProgress = Math.max(0, Math.min(100, Math.round(progress)));
 
   const progressColor = cn(
-    "h-2 transition-all rounded-full relative z-10",
+    "absolute -top-[8%] left-0 h-2 transition-all rounded-full relative z-10",
     roundedProgress < 30 && "bg-red-500/80",
     roundedProgress >= 30 && roundedProgress < 70 && "bg-yellow-500/80",
     roundedProgress >= 70 && cn(
@@ -93,11 +93,11 @@ export function SubjectCard({
             </div>
           </div>
 
-          <div className="relative w-full  h-2 mb-2 bg-black/10 dark:bg-secondary/30 rounded-full overflow-hidden backdrop-blur-sm">
+          <div className="relative w-full  h-2 mb-2 bg-black/10 dark:bg-secondary/30 rounded-full overflow-hidden backdrop-blur-sm border dark:border-white/20">
             {milestones.map((milestone) => (
               <div
                 key={milestone}
-                className="absolute top-0 bottom-0 w-0.5 bg-black/20 dark:bg-white/10"
+                className="absolute top-0 bottom-0 w-0.5 bg-black/20 dark:bg-white/20"
                 style={{ left: `${milestone}%` }}
               />
             ))}
