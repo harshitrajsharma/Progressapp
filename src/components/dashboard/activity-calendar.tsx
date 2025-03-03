@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useState, Suspense } from "react";
+import React, { useMemo, useCallback, useState, useEffect, Suspense } from "react";
 import { 
   format, 
   startOfMonth, 
@@ -28,7 +28,8 @@ import {
 } from "@tanstack/react-query";
 import { ErrorBoundary, FallbackProps } from 'react-error-boundary';
 
-// Advanced Type Definitions with Enhanced Type Safety
+// Type Definitions
+
 interface ActivityDetails {
   learning: number;
   revision: number;
@@ -59,7 +60,8 @@ interface ActivityCalendarProps {
   examDate: Date | null;
 }
 
-// Centralized Error Handling Component
+// Error Fallback Component
+
 const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) => {
   return (
     <div 
@@ -84,9 +86,9 @@ const ErrorFallback: React.FC<FallbackProps> = ({ error, resetErrorBoundary }) =
   );
 };
 
-// Skeleton Loading State Component
-const CalendarSkeleton: React.FC<{ variant?: 'sidebar' | 'dashboard' }> = () => {
+// Calendar Skeleton Component
 
+const CalendarSkeleton: React.FC<{ variant?: 'sidebar' | 'dashboard' }> = () => {
   return (
     <div className="animate-pulse space-y-4">
       <div className="grid grid-cols-7 gap-1">
@@ -101,10 +103,11 @@ const CalendarSkeleton: React.FC<{ variant?: 'sidebar' | 'dashboard' }> = () => 
   );
 };
 
-// Memoized Data Fetching with Advanced Error Handling
+// Fetch Month Activities Function
+
 const fetchMonthActivities = async (monthStart: Date, monthEnd: Date): Promise<ActivityData[]> => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 10000); // 10-second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
   try {
     const response = await fetch(
@@ -140,10 +143,16 @@ const fetchMonthActivities = async (monthStart: Date, monthEnd: Date): Promise<A
     }));
   } catch (error) {
     clearTimeout(timeoutId);
-    console.error("Sophisticated Error in Activity Fetching:", error);
-    throw error;
+    if ((error as Error).name === 'AbortError') {
+      console.log('Fetch aborted due to timeout or navigation');
+      return []; // Return an empty array to avoid breaking the app
+    }
+    console.error("Error in Activity Fetching:", error);
+    throw error; // Rethrow other errors for further handling
   }
 };
+
+// Main ActivityCalendar Component
 
 export function ActivityCalendar({ 
   variant = 'dashboard',
@@ -155,7 +164,26 @@ export function ActivityCalendar({
   const isSidebar = variant === 'sidebar';
   const queryClient = useQueryClient();
 
-  // Enhanced Query with Sophisticated Caching Strategy
+  // Prefetch current and last 2 months
+  useEffect(() => {
+    const prevMonth1 = addMonths(currentMonth, -1); // Previous month
+    const prevMonth2 = addMonths(currentMonth, -2); // Two months ago
+    const prevMonth1Start = startOfMonth(prevMonth1);
+    const prevMonth2Start = startOfMonth(prevMonth2);
+
+    // Prefetch previous month
+    queryClient.prefetchQuery({
+      queryKey: ['activities', prevMonth1Start.toISOString()],
+      queryFn: () => fetchMonthActivities(prevMonth1Start, endOfMonth(prevMonth1Start)),
+    });
+
+    // Prefetch two months ago
+    queryClient.prefetchQuery({
+      queryKey: ['activities', prevMonth2Start.toISOString()],
+      queryFn: () => fetchMonthActivities(prevMonth2Start, endOfMonth(prevMonth2Start)),
+    });
+  }, [currentMonth, queryClient]);
+
   const monthStart = useMemo(() => startOfMonth(currentMonth), [currentMonth]);
   const monthEnd = useMemo(() => endOfMonth(currentMonth), [currentMonth]);
   
@@ -167,22 +195,15 @@ export function ActivityCalendar({
   } = useQuery<ActivityData[]>({
     queryKey: ['activities', monthStart.toISOString()],
     queryFn: () => fetchMonthActivities(monthStart, monthEnd),
-    staleTime: 5 * 60 * 1000,   // 5 minutes
-    gcTime: 30 * 60 * 1000,      // 30 minutes cache retention
-    retry: 2,                    // Retry mechanism
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 2,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
   });
 
-  // Memoized Navigation Functions
-  const nextMonth = useCallback(() => {
-    setCurrentMonth(prev => addMonths(prev, 1));
-  }, []);
+  const nextMonth = useCallback(() => setCurrentMonth(prev => addMonths(prev, 1)), []);
+  const prevMonth = useCallback(() => setCurrentMonth(prev => addMonths(prev, -1)), []);
 
-  const prevMonth = useCallback(() => {
-    setCurrentMonth(prev => addMonths(prev, -1));
-  }, []);
-
-  // Performance-Optimized Calendar Calculations
   const calendarStart = useMemo(() => startOfWeek(monthStart), [monthStart]);
   const calendarEnd = useMemo(() => endOfWeek(monthEnd), [monthEnd]);
   const days = useMemo(() => 
@@ -190,12 +211,9 @@ export function ActivityCalendar({
     [calendarStart, calendarEnd]
   );
 
-  // Memoized Activity Computation Functions
   const getActivityLevel = useCallback((date: Date): number => {
     const activity = activities.find((a) => isSameDay(new Date(a.date), date));
-    
     if (!activity?.totalCount) return 0;
-    
     if (activity.totalCount >= 10) return 3;
     if (activity.totalCount >= 5) return 2;
     if (activity.totalCount >= 1) return 1;
@@ -211,16 +229,24 @@ export function ActivityCalendar({
     }
   }, []);
 
-  const getActivityTooltip = useCallback((date: Date): string => {
+  const getActivityTooltip = useCallback((date: Date) => {
     const activity = activities.find((a) => isSameDay(new Date(a.date), date));
-    if (!activity?.totalCount) return "No activities";
+    if (!activity?.totalCount) {
+      return <span>No activities</span>;
+    }
     
     const { details } = activity;
-    return `${activity.totalCount} activities\n` +
-           `Learning: ${details.learning}\n` +
-           `Revision: ${details.revision}\n` +
-           `Practice: ${details.practice}\n` +
-           `Test: ${details.test}`;
+    return (
+      <div className="text-xs">
+        <p className="font-medium">Total Activities: {activity.totalCount}</p>
+        <ul className="list-disc pl-4">
+          <li>Learning: {details.learning}</li>
+          <li>Revision: {details.revision}</li>
+          <li>Practice: {details.practice}</li>
+          <li>Test: {details.test}</li>
+        </ul>
+      </div>
+    );
   }, [activities]);
 
   const handleDateClick = useCallback((date: Date) => {
@@ -229,10 +255,9 @@ export function ActivityCalendar({
     }
   }, [onSelectDate, examDate]);
 
-  // Accessibility-Enhanced Date Rendering
   const renderCalendarGrid = () => {
     if (isLoading) return <CalendarSkeleton variant={variant} />;
-    if (error) throw error;  // Trigger error boundary
+    if (error) throw error;
 
     return (
       <div 
@@ -263,9 +288,10 @@ export function ActivityCalendar({
                     isExamDay && "bg-red-500/20 rounded-md text-red-600 dark:text-red-400",
                     !isExamDay && !isFutureDay && getActivityColor(activityLevel),
                     "rounded-md",
-                    isToday(day) && "ring-1 ring-green-500/50",
+                    isToday(day) && "border-2 border-green-500",
                     isFutureDay && "text-muted-foreground/30 cursor-not-allowed",
-                    isSelected && !isExamDay && "ring-2 ring-primary/50"
+                    isSelected && !isExamDay && "bg-primary/20 border-2 border-primary",
+                    !isFutureDay && "hover:ring-2 hover:ring-gray-300 dark:hover:ring-gray-600"
                   )}
                 >
                   <span className={cn(
@@ -281,9 +307,7 @@ export function ActivityCalendar({
                 </button>
               </TooltipTrigger>
               <TooltipContent side="bottom">
-                <pre className="text-xs whitespace-pre-line">
-                  {getActivityTooltip(day)}
-                </pre>
+                {getActivityTooltip(day)}
               </TooltipContent>
             </Tooltip>
           );
@@ -304,7 +328,6 @@ export function ActivityCalendar({
         className="space-y-4 select-none" 
         aria-live="polite"
       >
-        {/* Header Section */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className={cn(
@@ -315,7 +338,7 @@ export function ActivityCalendar({
               "font-semibold text-foreground",
               isSidebar ? "text-xs" : "text-xs sm:text-sm"
             )}>
-              {format(currentMonth, isSidebar ? 'dd MMM yyyy' : 'dd MMMM yyyy')}
+              {format(currentMonth, isSidebar ? 'MMM yyyy' : 'MMMM yyyy')}
             </h2>
           </div>
           <div className="flex gap-1">
@@ -346,7 +369,6 @@ export function ActivityCalendar({
           </div>
         </div>
 
-        {/* Days Header */}
         <div className={cn(
           "grid grid-cols-7 gap-1 mb-1 text-muted-foreground",
           isSidebar ? "text-[10px]" : "text-[10px] sm:text-xs"
@@ -358,10 +380,8 @@ export function ActivityCalendar({
           ))}
         </div>
 
-        {/* Calendar Grid */}
         {renderCalendarGrid()}
 
-        {/* Legend */}
         <div className={cn(
           "flex items-center justify-between text-muted-foreground border-t",
           isSidebar ? "mt-2 pt-2 text-[10px]" : "mt-3 pt-3 sm:mt-4 sm:pt-3 text-[10px] sm:text-xs"
@@ -400,15 +420,16 @@ export function ActivityCalendar({
   );
 }
 
-// Comprehensive Wrapper Component for Consistent Error Handling and Performance
+// Enhanced ActivityCalendar Wrapper
+
 export const EnhancedActivityCalendar: React.FC<ActivityCalendarProps> = (props) => {
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
-        staleTime: 5 * 60 * 1000,      // 5-minute stale time
-        gcTime: 30 * 60 * 1000,         // 30-minute garbage collection
-        refetchOnWindowFocus: false,    // Prevent unnecessary refetches
-        retry: 2,                       // Intelligent retry mechanism
+        staleTime: 5 * 60 * 1000,
+        gcTime: 30 * 60 * 1000,
+        refetchOnWindowFocus: false,
+        retry: 2,
         retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000)
       }
     }
@@ -423,12 +444,12 @@ export const EnhancedActivityCalendar: React.FC<ActivityCalendarProps> = (props)
   );
 };
 
-// Optional Utility Function for Date-Related Calculations
+// Utility Functions
+
 export const getCalendarUtils = () => ({
   isDateDisabled: (date: Date, examDate?: Date | null) => {
     return examDate ? isAfter(date, examDate) : false;
   },
-  
   calculateActivityIntensity: (totalCount?: number): number => {
     if (!totalCount) return 0;
     if (totalCount >= 10) return 3;

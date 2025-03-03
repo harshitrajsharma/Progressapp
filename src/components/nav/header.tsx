@@ -28,9 +28,11 @@ export function Header({ children }: HeaderProps) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-1 md:gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <Clock />
-            <UserNav />
+            <div className="md:hidden">
+            <UserNav isCollapsed= {true} />
+            </div>
           </div>
         </div>
       </Shell>
