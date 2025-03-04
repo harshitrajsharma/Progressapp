@@ -12,35 +12,53 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, Settings, MoreVertical, Monitor, Sun, Moon } from "lucide-react";
+import { 
+  LogOut, 
+  Settings, 
+  MoreVertical, 
+  Monitor, 
+  Sun, 
+  Moon, 
+  Palette, 
+  User, 
+  // CreditCard 
+} from "lucide-react";
 import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Custom hook to manage theme (unchanged)
+// Theme Management Hook (unchanged)
 function useTheme() {
-  const [theme, setTheme] = useState<string>('system');
+  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>('system');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
 
-  useEffect(() => {
-    const storedTheme = localStorage.getItem('theme') || 'system';
-    setTheme(storedTheme);
-    document.documentElement.classList.toggle('dark', storedTheme === 'dark' || (storedTheme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches));
-  }, []);
-
-  const applyTheme = (newTheme: string) => {
+  const applyTheme = useCallback((newTheme: 'system' | 'light' | 'dark') => {
+    const systemPrefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     localStorage.setItem('theme', newTheme);
     setTheme(newTheme);
-    if (newTheme === 'system') {
-      document.documentElement.classList.toggle('dark', window.matchMedia('(prefers-color-scheme: dark)').matches);
-    } else {
-      document.documentElement.classList.toggle('dark', newTheme === 'dark');
-    }
-  };
+    const effectiveTheme = newTheme === 'system' 
+      ? (systemPrefersDark ? 'dark' : 'light') 
+      : newTheme;
+    setResolvedTheme(effectiveTheme);
+    document.documentElement.classList.toggle('dark', effectiveTheme === 'dark');
+  }, []);
 
-  return { theme, applyTheme };
+  useEffect(() => {
+    const storedTheme = localStorage.getItem('theme') as 'system' | 'light' | 'dark' || 'system';
+    applyTheme(storedTheme);
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleThemeChange = () => {
+      if (theme === 'system') applyTheme('system');
+    };
+    mediaQuery.addEventListener('change', handleThemeChange);
+    return () => mediaQuery.removeEventListener('change', handleThemeChange);
+  }, [applyTheme, theme]);
+
+  return { theme, resolvedTheme, applyTheme };
 }
 
-// Theme Toggle Button Component (Improved)
+// Theme Toggle Component (unchanged)
 function ThemeToggleButton() {
   const { theme, applyTheme } = useTheme();
 
@@ -50,37 +68,32 @@ function ThemeToggleButton() {
     { name: 'dark', icon: Moon, label: 'Dark' },
   ];
 
-  const handleToggle = () => {
-    const currentIndex = themes.findIndex(t => t.name === theme);
-    const nextIndex = (currentIndex + 1) % themes.length;
-    applyTheme(themes[nextIndex].name);
-  };
-
   return (
-    <Button
-      variant="outline"
-      className="flex items-center gap-1.5 p-1.5 border rounded-full bg-background hover:bg-muted/50 transition-colors"
-      onClick={handleToggle}
-      title={`Current theme: ${theme}`}
-    >
-      {themes.map(({ name, icon: Icon }) => (
-        <span
+    <div className="flex items-center gap-1 p-1 bg-muted/50 rounded-md">
+      {themes.map(({ name, icon: Icon, label }) => (
+        <Button
           key={name}
+          variant={theme === name ? "default" : "ghost"}
+          size="icon"
+          onClick={() => applyTheme(name as 'system' | 'light' | 'dark')}
           className={cn(
-            "p-1.5 rounded-full transition-colors",
-            theme === name ? "bg-muted text-foreground" : "text-muted-foreground hover:text-foreground"
+            "h-7 w-7 relative",
+            theme === name && "bg-primary text-primary-foreground"
           )}
+          aria-label={`Switch to ${label} theme`}
         >
           <Icon className="h-4 w-4" />
-        </span>
+          <span className="sr-only">{label}</span>
+        </Button>
       ))}
-    </Button>
+    </div>
   );
 }
 
 export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
   const { data: session } = useSession();
   const router = useRouter();
+  const [isOpen, setIsOpen] = useState(false);
 
   if (!session?.user) return null;
 
@@ -88,80 +101,158 @@ export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
     ?.split(" ")
     .map((n) => n[0])
     .join("")
-    .toUpperCase();
+    .toUpperCase()
+    .slice(0, 2);
 
-  const menuContent = (
-    <DropdownMenuContent className="w-64 p-3 bg-background rounded-lg shadow-lg" align="end" forceMount>
-      <DropdownMenuLabel className="font-normal py-2 px-3">
-        <div className="flex flex-col gap-1.5">
-          <p className="text-base font-semibold leading-tight truncate">{session.user.name}</p>
-          <p className="text-sm text-muted-foreground truncate">{session.user.email}</p>
-        </div>
-      </DropdownMenuLabel>
-      <DropdownMenuSeparator className="my-2 bg-muted/20" />
-      <DropdownMenuGroup className="space-y-1">
-        <DropdownMenuItem
-          onClick={() => router.push('/account')}
-          className="py-2.5 px-3 rounded-lg hover:bg-muted focus:bg-muted cursor-pointer transition-colors flex items-center gap-3"
-        >
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm">Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem className="py-2.5 px-3 rounded-lg hover:bg-muted focus:bg-muted cursor-pointer transition-colors flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <Monitor className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm">Theme</span>
-          </div>
-          <ThemeToggleButton />
-        </DropdownMenuItem>
-      </DropdownMenuGroup>
-      <DropdownMenuSeparator className="my-2 bg-muted/20" />
-      <DropdownMenuItem
-        className="py-2.5 px-3 rounded-lg text-red-600 hover:bg-red-50 focus:bg-red-50 focus:text-red-600 cursor-pointer transition-colors flex items-center gap-3"
-        onClick={() => signOut()}
-      >
-        <LogOut className="h-4 w-4" />
-        <span className="text-sm">Log out</span>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  );
+  const menuItems = [
+    {
+      label: 'Profile',
+      icon: User,
+      onClick: () => router.push('/account'),
+      description: 'View and edit your profile',
+    },
+    {
+      label: 'Settings',
+      icon: Settings,
+      onClick: () => router.push('/account'),
+      description: 'Manage account preferences',
+    },
+    // {
+    //   label: 'Billing',
+    //   icon: CreditCard,
+    //   onClick: () => router.push('/billing'),
+    //   description: 'View payment information',
+    // },
+  ];
+
+  const menuVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: -10 },
+    visible: { opacity: 1, scale: 1, y: 0 },
+  };
 
   return (
-    <div className={cn("flex items-center", isCollapsed ? "justify-center" : "justify-between")}>
-      {isCollapsed ? (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-muted">
-              <Avatar className="h-9 w-9">
-                <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-                <AvatarFallback className="text-sm">{initials}</AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          {menuContent}
-        </DropdownMenu>
-      ) : (
-        <>
-          <div className="flex items-center gap-3 w-full">
-            <Avatar className="h-10 w-10">
-              <AvatarImage src={session.user.image || ""} alt={session.user.name || ""} />
-              <AvatarFallback className="text-sm">{initials}</AvatarFallback>
+    <div className={cn("flex items-center", isCollapsed ? "justify-center" : "gap-2")}>
+      <DropdownMenu onOpenChange={setIsOpen}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            className={cn(
+              "group relative transition-all duration-200",
+              isCollapsed ? "h-10 w-10 p-0" : "h-12 w-full justify-start gap-3 p-2"
+            )}
+            aria-label="User menu"
+          >
+            <Avatar className={cn(isCollapsed ? "h-10 w-10" : "h-11 w-11", "transition-all")}>
+              <AvatarImage
+                src={session.user.image || ""}
+                alt={`${session.user.name}'s profile`}
+                className="object-cover"
+              />
+              <AvatarFallback className="bg-gradient-to-br from-muted/50 to-muted/20 text-sm font-medium">
+                {initials}
+              </AvatarFallback>
             </Avatar>
-            <div className="flex flex-col gap-0.5 w-full">
-              <p className="text-sm font-medium truncate max-w-[180px]">{session.user.name}</p>
-              <p className="text-xs text-muted-foreground truncate max-w-[180px]">{session.user.email}</p>
-            </div>
-          </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
-                <MoreVertical className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            {menuContent}
-          </DropdownMenu>
-        </>
-      )}
+            {!isCollapsed && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex-1 text-left min-w-0"
+              >
+                <p className="text-sm font-medium truncate">{session.user.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+              </motion.div>
+            )}
+            {!isCollapsed && (
+              <MoreVertical className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+            )}
+          </Button>
+        </DropdownMenuTrigger>
+
+        <AnimatePresence>
+          {isOpen && (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              variants={menuVariants}
+              transition={{ duration: 0.15, ease: "easeOut" }}
+            >
+              <DropdownMenuContent
+                className={cn(
+                  "w-72 p-2 rounded-xl shadow-xl ml-4", // Added ml-4 for left margin
+                  "bg-background/80 backdrop-blur-md border border-white/20", // Glassmorphic effect
+                  "supports-[backdrop-filter]:bg-background/60 supports-[backdrop-filter]:backdrop-blur-md"
+                )}
+                align="end"
+              >
+                <DropdownMenuLabel className="p-2">
+                  <div className="flex items-center gap-3">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={session.user.image || ""} />
+                      <AvatarFallback>{initials}</AvatarFallback>
+                    </Avatar>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">{session.user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{session.user.email}</p>
+                    </div>
+                  </div>
+                </DropdownMenuLabel>
+
+                <DropdownMenuSeparator className="my-1 bg-white/20" />
+
+                <DropdownMenuGroup className="space-y-1">
+                  {menuItems.map(({ label, icon: Icon, onClick, description }) => (
+                    <DropdownMenuItem
+                      key={label}
+                      onClick={onClick}
+                      className={cn(
+                        "p-2 rounded-lg cursor-pointer transition-all duration-150",
+                        "hover:bg-white/10 focus:bg-white/10 focus:outline-none",
+                        "flex items-start gap-3 group"
+                      )}
+                    >
+                      <div className="p-1.5 bg-white/10 rounded-md group-hover:bg-white/20 transition-colors">
+                        <Icon className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium">{label}</span>
+                        <p className="text-xs text-muted-foreground">{description}</p>
+                      </div>
+                    </DropdownMenuItem>
+                  ))}
+
+                  <DropdownMenuItem className="p-2 rounded-lg hover:bg-white/10 focus:bg-white/10">
+                    <div className="flex items-center justify-between w-full gap-3">
+                      <div className="flex items-center gap-3">
+                        <div className="p-1.5 bg-white/10 rounded-md">
+                          <Palette className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <span className="text-sm font-medium">Theme</span>
+                      </div>
+                      <ThemeToggleButton />
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+
+                <DropdownMenuSeparator className="my-1 bg-white/20" />
+
+                <DropdownMenuItem
+                  onClick={() => signOut({ callbackUrl: '/' })}
+                  className={cn(
+                    "p-2 rounded-lg text-red-600 hover:bg-red-500/20 focus:bg-red-500/20",
+                    "transition-all duration-150 flex items-center gap-3"
+                  )}
+                >
+                  <div className="p-1.5 bg-red-500/20 rounded-md">
+                    <LogOut className="h-4 w-4" />
+                  </div>
+                  <span className="text-sm font-medium">Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </DropdownMenu>
     </div>
   );
 }

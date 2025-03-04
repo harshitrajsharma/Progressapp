@@ -91,7 +91,7 @@ export default function SubjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<ChapterCategory>('learning');
   const { toast } = useToast();
-  const { updateTopicStatus, isPending } = useTopicManagement();
+  const { isPending } = useTopicManagement();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [tests, setTests] = useState<BaseTest[]>([]);
 
@@ -138,33 +138,64 @@ export default function SubjectPage() {
         : Math.min(3, topic[`${selectedCategory}Count`] + 1);
 
     try {
-      // Store progress in database
-      const progressResponse = await fetch(`/api/topics/${topicId}/progress`, {
+      // Optimistic update
+      setSubject(prev => {
+        if (!prev) return prev;
+        
+        const updatedSubject = {
+          ...prev,
+          chapters: prev.chapters.map(chapter => 
+            chapter.id === chapterId
+              ? {
+                  ...chapter,
+                  topics: chapter.topics.map(t =>
+                    t.id === topicId 
+                      ? {
+                          ...t,
+                          ...(selectedCategory === 'learning' 
+                            ? { learningStatus: !t.learningStatus }
+                            : { [`${selectedCategory}Count`]: newValue })
+                        }
+                      : t
+                  )
+                }
+              : chapter
+          )
+        };
+        return updatedSubject;
+      });
+
+      // Single API call with combined update
+      const response = await fetch(`/api/topics/${topicId}/status`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           type: selectedCategory,
+          currentValue,
+          newValue,
+          updateProgress: true
         }),
       });
 
-      if (!progressResponse.ok) {
-        throw new Error('Failed to store progress');
-      }
+      if (!response.ok) {
+        const errorData = await response.json();
+        if (errorData.error === "TOPIC_NOT_LEARNED") {
+          // Revert the optimistic update with shake animation
+          const topicElement = document.querySelector(`[data-topic-id="${topicId}"]`);
+          if (topicElement) {
+            topicElement.classList.add('shake-animation', 'checkbox-error');
+            // Remove the animation classes after it completes
+            setTimeout(() => {
+              topicElement.classList.remove('shake-animation', 'checkbox-error');
+            }, 500);
+          }
 
-      // Update topic status with existing topic data
-      updateTopicStatus(
-        topicId,
-        topic.name,
-        selectedCategory,
-        currentValue,
-        newValue,
-        (data) => {
+          // Revert the state immediately
           setSubject(prev => {
             if (!prev) return prev;
-            
-            const updatedSubject = {
+            return {
               ...prev,
               chapters: prev.chapters.map(chapter => 
                 chapter.id === chapterId
@@ -174,12 +205,9 @@ export default function SubjectPage() {
                         t.id === topicId 
                           ? {
                               ...t,
-                              ...data.topic,
-                              // Ensure all values are preserved
-                              learningStatus: data.topic.learningStatus ?? t.learningStatus,
-                              revisionCount: data.topic.revisionCount ?? t.revisionCount,
-                              practiceCount: data.topic.practiceCount ?? t.practiceCount,
-                              testCount: data.topic.testCount ?? t.testCount
+                              ...(selectedCategory === 'learning' 
+                                ? { learningStatus: topic.learningStatus }
+                                : { [`${selectedCategory}Count`]: currentValue })
                             }
                           : t
                       )
@@ -187,24 +215,166 @@ export default function SubjectPage() {
                   : chapter
               )
             };
-            
-            // Clear progress cache to force recalculation
-            progressCache.clear();
-            
-            return updatedSubject;
           });
-        },
-        topic // Pass existing topic data
-      );
+
+          toast({
+            title: "Action Required ⚠️",
+            description: `You need to learn "${errorData.names.topicName}" in "${errorData.names.chapterName}" before marking ${selectedCategory} progress.`,
+            className: "bg-yellow-50 dark:bg-yellow-900 border-yellow-200 dark:border-yellow-800",
+          });
+          return;
+        }
+        throw new Error('Failed to update topic status');
+      }
+
+      const result = await response.json();
+
+      // Show completion celebrations
+      if (result.completionStatus.isCompleted) {
+        if (selectedCategory === 'learning') {
+          // Small confetti celebration for learning a topic
+          import('canvas-confetti').then((confetti) => {
+            confetti.default({
+              particleCount: 30,
+              spread: 50,
+              origin: { y: 0.7 }
+            });
+          });
+
+          toast({
+            title: `Topic "${result.completionStatus.names.topicName}" Learned! 🎓`,
+            description: `You've successfully learned "${result.completionStatus.names.topicName}" in ${result.completionStatus.names.chapterName}!`,
+            className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+          });
+        } else {
+          // Toast message for individual checkbox completion
+          toast({
+            title: `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Progress`,
+            description: `${selectedCategory} ${newValue} completed for "${result.completionStatus.names.topicName}"!`,
+            className: "bg-green-50 dark:bg-green-900 border-green-200 dark:border-green-800",
+          });
+        }
+      }
+
+      // Celebration for completing all checkboxes in a category
+      if (result.completionStatus.isTopicCategoryCompleted) {
+        import('canvas-confetti').then((confetti) => {
+          confetti.default({
+            particleCount: 50,
+            spread: 60,
+            origin: { y: 0.7 }
+          });
+        });
+
+        toast({
+          title: `${selectedCategory.charAt(0).toUpperCase() + selectedCategory.slice(1)} Mastered! ⭐`,
+          description: `You've completed all ${selectedCategory} tasks for "${result.completionStatus.names.topicName}"!`,
+          className: "bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800",
+        });
+      }
+
+      // Chapter completion celebration
+      if (result.completionStatus.isChapterCompleted) {
+        toast({
+          title: `Chapter "${result.completionStatus.names.chapterName}" Mastered! 🌟`,
+          description: `Amazing! You've completed all ${selectedCategory} tasks in "${result.completionStatus.names.chapterName}"!`,
+          className: "bg-blue-50 dark:bg-blue-900 border-blue-200 dark:border-blue-800",
+        });
+        
+        // Trigger confetti for chapter completion
+        import('canvas-confetti').then((confetti) => {
+          confetti.default({
+            particleCount: 100,
+            spread: 70,
+            origin: { y: 0.6 },
+            colors: ['#3b82f6', '#22c55e', '#eab308']
+          });
+        });
+      }
+
+      // Subject completion celebration
+      if (result.completionStatus.isSubjectCompleted) {
+        toast({
+          title: `Subject "${result.completionStatus.names.subjectName}" Conquered! 🏆`,
+          description: `Outstanding achievement! You've mastered all ${selectedCategory} tasks in "${result.completionStatus.names.subjectName}"!`,
+          className: "bg-purple-50 dark:bg-purple-900 border-purple-200 dark:border-purple-800",
+        });
+        
+        // Trigger special confetti for subject completion
+        import('canvas-confetti').then((confetti) => {
+          const duration = 3000;
+          const end = Date.now() + duration;
+
+          const frame = () => {
+            confetti.default({
+              particleCount: 2,
+              angle: 60,
+              spread: 55,
+              origin: { x: 0 },
+              colors: ['#9333ea', '#3b82f6', '#22c55e']
+            });
+            
+            confetti.default({
+              particleCount: 2,
+              angle: 120,
+              spread: 55,
+              origin: { x: 1 },
+              colors: ['#9333ea', '#3b82f6', '#22c55e']
+            });
+
+            if (Date.now() < end) {
+              requestAnimationFrame(frame);
+            }
+          };
+          
+          frame();
+        });
+      }
+
+      // Update cache selectively
+      const cacheKey = `${actualSubjectId}-progress`;
+      const cachedProgress = progressCache.get(cacheKey);
+      if (cachedProgress) {
+        const updatedProgress = calculateSubjectProgress(subject);
+        progressCache.set(cacheKey, {
+          progress: updatedProgress,
+          timestamp: Date.now()
+        });
+      }
+
     } catch (error) {
-      console.error('Error storing progress:', error);
+      console.error('Error updating topic:', error);
+      // Revert optimistic update on error
+      setSubject(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          chapters: prev.chapters.map(chapter => 
+            chapter.id === chapterId
+              ? {
+                  ...chapter,
+                  topics: chapter.topics.map(t =>
+                    t.id === topicId 
+                      ? {
+                          ...t,
+                          ...(selectedCategory === 'learning' 
+                            ? { learningStatus: topic.learningStatus }
+                            : { [`${selectedCategory}Count`]: currentValue })
+                        }
+                      : t
+                  )
+                }
+              : chapter
+          )
+        };
+      });
+      
       toast({
         title: "Error",
-        description: "Failed to store progress. Please try again.",
-        variant: "destructive",
+        description: "Failed to update topic status. Please try again.",
       });
     }
-  }, [subject, selectedCategory, updateTopicStatus, toast]);
+  }, [subject, selectedCategory, actualSubjectId, toast]);
 
   const handleChapterEdit = useCallback((chapterId: string, updatedChapter: { name: string; important: boolean }) => {
     setSubject(prev => {
@@ -290,7 +460,6 @@ export default function SubjectPage() {
       toast({
         title: "Error",
         description: "Failed to delete topic. Please try again.",
-        variant: "destructive",
       });
     }
   }, [toast]);
@@ -337,7 +506,6 @@ export default function SubjectPage() {
       toast({
         title: "Error",
         description: "Failed to delete chapter. Please try again.",
-        variant: "destructive",
       });
       throw error; // Re-throw the error so the loading state is cleared
     }
@@ -433,7 +601,6 @@ export default function SubjectPage() {
       toast({
         title: "Error",
         description: "Failed to update topic. Please try again.",
-        variant: "destructive",
       });
       throw error;
     }
@@ -492,7 +659,6 @@ export default function SubjectPage() {
       toast({
         title: "Error",
         description: "Failed to add test. Please try again.",
-        variant: "destructive",
       });
     }
   }, [toast]);
@@ -540,7 +706,6 @@ export default function SubjectPage() {
       toast({
         title: "Error",
         description: "Failed to delete test. Please try again.",
-        variant: "destructive",
       });
     }
   }, [toast]);
@@ -570,7 +735,6 @@ export default function SubjectPage() {
         toast({
           title: "Error",
           description: "Failed to load data. Please try again.",
-          variant: "destructive",
         });
       } finally {
         setIsLoading(false);

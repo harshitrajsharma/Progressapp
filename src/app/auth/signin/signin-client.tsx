@@ -9,7 +9,7 @@ import { GraduationCap } from 'lucide-react';
 
 export default function SignInClient() {
   const searchParams = useSearchParams();
-  const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
+  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950">

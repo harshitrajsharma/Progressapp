@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter"
 import { NextAuthOptions } from "next-auth"
+import { JWT } from "next-auth/jwt"
 import GoogleProvider from "next-auth/providers/google"
 import prisma from "@/lib/prisma"
 import { getServerSession } from "next-auth/next"
@@ -37,32 +38,36 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.sub || '';
         session.user.examName = (token.examName as string) || null;
         session.user.examDate = token.examDate ? new Date(token.examDate as string) : null;
+        session.user.needsOnboarding = token.needsOnboarding as boolean;
       }
       return session;
     },
     async jwt({ token, user, trigger, session }) {
       if (user) {
+        // This is the initial sign in
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { examDate: true, examName: true }
+        });
+        
         token.sub = user.id;
-        token.examName = user.examName || null;
-        token.examDate = user.examDate || null;
+        token.examName = dbUser?.examName || null;
+        token.examDate = dbUser?.examDate || null;
+        token.needsOnboarding = !dbUser?.examDate; // Set needsOnboarding based on examDate
       }
+      
       // If you update the session
       if (trigger === "update" && session?.user) {
         token.examName = session.user.examName || null;
         token.examDate = session.user.examDate || null;
+        token.needsOnboarding = !session.user.examDate;
       }
       return token;
     },
-    async redirect({ url, baseUrl, token }) {
-      // Check if the URL is the dashboard and user needs onboarding
-      if (url.includes('/dashboard') && url.startsWith(baseUrl)) {
-        const session = await prisma.user.findFirst({
-          where: { id: token?.sub },
-          select: { examDate: true }
-        });
-        if (!session?.examDate) {
-          return `${baseUrl}/onboarding`;
-        }
+    async redirect({ url, baseUrl, token }: { url: string; baseUrl: string; token?: JWT }) {
+      // Check if the URL is a protected route and user needs onboarding
+      if (!url.includes('/onboarding') && token?.needsOnboarding) {
+        return `${baseUrl}/onboarding`;
       }
       
       if (url.startsWith("/")) return `${baseUrl}${url}`
@@ -109,9 +114,8 @@ export async function authConfig(req: Request) {
     if (!session?.user) {
       return Response.redirect(new URL('/auth/signin', baseUrl));
     }
-
     // Check if user needs onboarding
-    if (url.includes('/dashboard') && url.startsWith(baseUrl)) {
+    if (url.pathname.includes('/dashboard') && url.origin === baseUrl) {
       const user = await prisma.user.findUnique({
         where: { id: session.user.id },
         select: { examDate: true }
