@@ -138,7 +138,7 @@ export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
             variant="ghost"
             className={cn(
               "group relative transition-all duration-200",
-              isCollapsed ? "h-10 w-10 p-0" : "h-12 w-full justify-start gap-3 p-2"
+              isCollapsed ? "h-10 w-10 p-2" : "h-12 w-full justify-start gap-3 p-2"
             )}
             aria-label="User menu"
           >
