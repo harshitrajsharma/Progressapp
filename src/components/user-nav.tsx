@@ -179,8 +179,8 @@ export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
             >
               <DropdownMenuContent
                 className={cn(
-                  "w-72 p-2 rounded-xl shadow-xl ml-4", // Added ml-4 for left margin
-                  "bg-background/80 backdrop-blur-md border border-white/20", // Glassmorphic effect
+                  "w-72 p-2 rounded-xl shadow-2xl ml-4", // Added ml-4 for left margin
+                  "bg-background/80 backdrop-blur-md border border-black/20 dark:border-white/20", // Glassmorphic effect
                   "supports-[backdrop-filter]:bg-background/60 supports-[backdrop-filter]:backdrop-blur-md"
                 )}
                 align="end"
@@ -198,7 +198,7 @@ export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
                   </div>
                 </DropdownMenuLabel>
 
-                <DropdownMenuSeparator className="my-1 bg-white/20" />
+                <DropdownMenuSeparator className="my-1 bg-black/20 dark:bg-white/20" />
 
                 <DropdownMenuGroup className="space-y-1">
                   {menuItems.map(({ label, icon: Icon, onClick, description }) => (
@@ -234,7 +234,7 @@ export function UserNav({ isCollapsed }: { isCollapsed: boolean }) {
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
 
-                <DropdownMenuSeparator className="my-1 bg-white/20" />
+                <DropdownMenuSeparator className="my-1 bg-black/20 dark:bg-white/20" />
 
                 <DropdownMenuItem
                   onClick={() => signOut({ callbackUrl: '/' })}

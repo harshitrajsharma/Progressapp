@@ -6,7 +6,7 @@ export function Footer() {
   const currentYear = new Date().getFullYear();
   
   return (
-    <footer className="w-full border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <footer className="w-full border-t border-black/20 dark:border-white/20 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-center md:justify-between">
           <Link href="/" className="flex items-center gap-2 hover:opacity-90 transition-opacity" aria-label="xLabs Home">

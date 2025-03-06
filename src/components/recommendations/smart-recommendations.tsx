@@ -96,8 +96,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         progress: revisionProgress,
         variant: "emerald",
         status: "Revise Now",
-        statusColor: "text-amber-500",
-        cardClassName: "bg-white/40 dark:bg-emerald-900/40 hover:bg-emerald-50/60 dark:hover:bg-emerald-800/60 backdrop-blur-sm",
+        statusColor: " text-emerald-600 dark:text-emerald-200",
+        cardClassName: "bg-emerald-400/40 dark:bg-emerald-900/40 hover:bg-emerald-400/60 dark:hover:bg-emerald-800/60 backdrop-blur-sm",
         behindTarget: undefined
       }))
     },
@@ -124,9 +124,9 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         variant: "blue",
         behindTarget: undefined,
         status: subject.isMathSubject ? "Math - Focus Required" : "Complete at Priority",
-        statusColor: subject.isMathSubject ? "text-red-600" : "text-emerald-500",
+        statusColor: subject.isMathSubject ? "text-red-600" : "dark:text-blue-600 dark:text-blue-200",
         cardClassName: cn(
-          "bg-white/40 dark:bg-blue-900/40 hover:bg-blue-50/60 dark:hover:bg-blue-800/60 backdrop-blur-sm",
+          "bg-blue-400/40 dark:bg-blue-900/40 hover:bg-blue-400/60 dark:hover:bg-blue-800/60 backdrop-blur-sm",
           subject.isMathSubject && "border-t-2 border-blue-200 dark:border-blue-800 pt-2"
         )
       }))
@@ -153,8 +153,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         progress: 0,
         variant: "amber",
         status: "High Priority - Start Soon",
-        statusColor: "text-red-500",
-        cardClassName: "bg-white/40 dark:bg-amber-900/40 hover:bg-amber-50/60 dark:hover:bg-amber-800/60 backdrop-blur-sm",
+        statusColor: " text-amber-600 dark:text-amber-200",
+        cardClassName: "bg-amber-400/40 dark:bg-amber-900/40 hover:bg-amber-400/60 dark:hover:bg-amber-800/60 backdrop-blur-sm",
         behindTarget: undefined
       }))
     }] : [{
@@ -179,8 +179,8 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
         progress: testProgress,
         variant: "purple",
         status: testProgress === 0 ? "Start Test" : "Take More Tests",
-        statusColor: "text-purple-500",
-        cardClassName: "bg-white/40 dark:bg-purple-900/40 hover:bg-purple-50/60 dark:hover:bg-purple-800/60 backdrop-blur-sm",
+        statusColor: "text-purple-600 dark:text-purple-200",
+        cardClassName: " bg-purple-400/40 dark:bg-purple-900/40 hover:bg-purple-400/60 dark:hover:bg-purple-800/60 backdrop-blur-sm",
         behindTarget: undefined
       }))
     }])
@@ -241,7 +241,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   };
 
   return (
-    <Card className="p-3 sm:p-4 md:p-6 bg-white/20 dark:bg-gray-900/20 backdrop-blur-md border-white/20 shadow-lg">
+    <Card className="p-3 sm:p-4 md:p-6 bg-white/20 dark:bg-gray-900/20 backdrop-blur-md border-black/20 dark:border-white/20 shadow-lg">
       <div className="space-y-4 sm:space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
           <div className="flex-1">
@@ -264,7 +264,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               key={section.title}
               title={<div className="flex items-center gap-2">{section.icon} <span>{section.title}</span></div>}
               description={section.description}
-              className={cn(section.className, "border border-white/20 shadow-lg")}
+              className={cn(section.className, "border border-black/20 dark:border-white/20 shadow-lg")}
               emptyMessage={section.emptyMessage}
               isEmpty={section.subjects.length === 0}
             >
@@ -328,7 +328,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
                   <RecommendationSection
                     title={<div className="flex items-center gap-2">{sections[activeSection].icon} <span>{sections[activeSection].title}</span></div>}
                     description={sections[activeSection].description}
-                    className={cn(sections[activeSection].className, "border border-white/20 shadow-lg")}
+                    className={cn(sections[activeSection].className, "border border-black/20 dark:border-white/20 shadow-lg")}
                     emptyMessage={sections[activeSection].emptyMessage}
                     isEmpty={sections[activeSection].subjects.length === 0}
                   >
@@ -363,7 +363,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white/20 dark:bg-gray-800/20 backdrop-blur-md border border-white/20 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors"
+                className="h-7 w-7 sm:h-8 sm:w-8 rounded-full bg-white/20 dark:bg-gray-800/20 backdrop-blur-md border border-black/20 dark:border-white/20 hover:bg-white/30 dark:hover:bg-gray-700/30 transition-colors"
                 onClick={() => setIsAutoPlay(!isAutoPlay)}
                 aria-label={isAutoPlay ? "Pause carousel" : "Play carousel"}
               >

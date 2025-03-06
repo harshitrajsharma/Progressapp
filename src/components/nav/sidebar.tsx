@@ -146,7 +146,7 @@ export function Sidebar({ isCollapsed, examDate, subjects, onToggleCollapse }: S
       aria-label="Main navigation"
     >
       {/* Sidebar Header */}
-      <div className="flex h-[60px] border-b justify-center items-center p-4">
+      <div className="flex border-b border-black/20 dark:border-white/20 justify-center items-center p-4">
         <Link href="/dashboard" className={cn("flex items-center gap-2 font-semibold", isCollapsed ? "justify-center" : "flex-1")} aria-label="Progress Tracking Dashboard">
           <Image src="/xMWLogo.svg" alt="Logo" width={100} height={100} className="h-7 w-7" />
           {!isCollapsed && <span className="truncate">Progress Tracking</span>}
@@ -171,10 +171,10 @@ export function Sidebar({ isCollapsed, examDate, subjects, onToggleCollapse }: S
             <NavigationLink key={item.href} {...item} isCollapsed={isCollapsed} color={item.color} />
           ))}
           {renderExamCounter && (
-            <div className="border-t border-b py-2">{renderExamCounter}</div>
+            <div className="border-t border-b border-black/20 dark:border-white/20 py-2">{renderExamCounter}</div>
           )}
           {!isDashboard && (
-            <div className="px-2 py-4 border-t border-b">
+            <div className="px-2 py-4 border-t border-b border-black/20 dark:border-white/20">
               <ErrorBoundary>
                 <SidebarProgressCard progress={progress} isCollapsed={isCollapsed} variant="sidebar" />
               </ErrorBoundary>
@@ -182,10 +182,10 @@ export function Sidebar({ isCollapsed, examDate, subjects, onToggleCollapse }: S
           )}
         </div>
 
-        {/* User Avatar */}
-        <div className=' border-t pt-2'>
-          <UserNav isCollapsed={isCollapsed} />
-        </div>
+      </div>
+      {/* User Avatar */}
+      <div className=' border-t border-black/20 dark:border-white/20 p-2'>
+        <UserNav isCollapsed={isCollapsed} />
       </div>
     </div>
   );

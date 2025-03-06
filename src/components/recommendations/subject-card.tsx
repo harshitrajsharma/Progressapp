@@ -67,7 +67,7 @@ export function SubjectCard({
       <div className="relative z-10">
         <Link href={href} className="block">
           <div className="flex items-center justify-between mb-2">
-            <h3 className="font-medium text-lg bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
+            <h3 className="font-medium text-lg bg-gradient-to-r from-gray-900 to-gray-600 dark:from-white dark:to-gray-300 bg-clip-text truncate text-transparent">
               {subject.name}
             </h3>
             <div className="flex items-center gap-2">

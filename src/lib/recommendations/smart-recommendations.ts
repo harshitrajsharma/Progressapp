@@ -88,7 +88,11 @@ export function getSmartRecommendations(subjects: SubjectWithRelations[]): Recom
 
   // Get subjects to start next (no progress or very low progress)
   const startNextSubjects = subjectRecommendations
-    .filter(rec => rec.learningProgress === 0 || rec.learningProgress < 10)
+    .filter(rec => {
+      // Only include subjects with 0% progress
+      // Remove the "or less than 10%" condition to prevent overlap
+      return rec.learningProgress === 0;
+    })
     .sort((a, b) => b.weightage - a.weightage)
     .slice(0, 3);
 

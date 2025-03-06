@@ -21,7 +21,7 @@ export function Clock() {
   if (!time) return null;
 
   return (
-    <div className="bg-black/10 backdrop-blur-sm px-3 py-1.5 rounded-lg font-mono font-bold text-lg">
+    <div className="bg-black/10 backdrop-blur-sm px-3 py-2 rounded-lg font-mono font-bold text-lg">
       <div className="flex items-center gap-1">
         <span className="text-emerald-500">{format(time, "HH")}</span>
         <span className="text-emerald-500 animate-pulse">:</span>

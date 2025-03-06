@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Header } from "@/components/nav/header";
 import { Sidebar } from "@/components/nav/sidebar";
 import { MobileBottomNavbar } from "@/components/nav/mobile-bottom-navbar";
-import { Footer } from "@/components/footer";
+import { Footer } from "@/components/nav/footer";
 import { cn } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { DailyActivity } from "@prisma/client";
@@ -80,7 +80,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         {/* Sidebar */}
         <aside
           className={cn(
-            "hidden lg:flex h-screen flex-col border-r bg-background transition-all duration-300 sticky top-0",
+            "hidden lg:flex h-screen flex-col border-r border-black/20 dark:border-white/20 bg-background transition-all duration-300 sticky top-0",
             isCollapsed ? "w-[80px]" : "w-[280px]"
           )}
         >
