@@ -1,7 +1,6 @@
 'use client';
 
 import { Suspense, useEffect, useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
 import { Clock, CheckCircle2, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { AddSubjectButton } from "@/components/subjects/add-subject-button";
 import { SubjectCard } from "@/components/subjects/subject-card";
@@ -290,7 +289,23 @@ export default function SubjectsPage() {
   const [activeTab, setActiveTab] = useState<SubjectCategory | 'all'>('all');
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const { subjects } = useSubjects();
-  const { data: session } = useSession();
+  const [userData, setUserData] = useState<{ examName: string | null }>();
+
+  // Fetch user data including exam name
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user/details');
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    }
+    fetchUserData();
+  }, []);
 
   useEffect(() => {
     const handleSearch = (e: CustomEvent<string>) => {
@@ -333,7 +348,7 @@ export default function SubjectsPage() {
           Subjects
         </h1>
         <p className="text-sm text-gray-500 dark:text-gray-400">
-          Manage your {session?.user?.examName || "exam"} subjects and track progress
+          Manage your {userData?.examName || "exam"} subjects and track progress
         </p>
       </div>
 

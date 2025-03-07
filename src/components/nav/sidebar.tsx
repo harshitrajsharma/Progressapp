@@ -184,7 +184,7 @@ export function Sidebar({ isCollapsed, examDate, subjects, onToggleCollapse }: S
 
       </div>
       {/* User Avatar */}
-      <div className=' border-t border-black/20 dark:border-white/20 p-2'>
+      <div className={`border-t border-black/20 dark:border-white/20 p-2 ${isCollapsed ? "p-3" : ""}`}>
         <UserNav isCollapsed={isCollapsed} />
       </div>
     </div>

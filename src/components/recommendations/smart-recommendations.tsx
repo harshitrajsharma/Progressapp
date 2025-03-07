@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
-import { useSession } from "next-auth/react";
 import { Pause, Play, Sparkles, BookOpen, Target, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -60,7 +59,7 @@ function filterRevisionSubjects(subjects: SubjectRecommendation[]) {
 
 export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   const recommendations = getSmartRecommendations(subjects);
-  const { data: session } = useSession();
+  const [userData, setUserData] = useState<{ examName: string | null }>();
   const [activeSection, setActiveSection] = useState(0);
   const [isAutoPlay, setIsAutoPlay] = useState(true);
   const [isDragging, setIsDragging] = useState(false);
@@ -72,6 +71,22 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
   const reviseSubjects = filterRevisionSubjects(recommendations.revise || []);
   const priorityFocusSubjects = filterPriorityFocusSubjects(recommendations.priorityFocus || []);
   const testProgressSubjects = recommendations.testProgress || [];
+
+  // Fetch user data including exam name
+  useEffect(() => {
+    async function fetchUserData() {
+      try {
+        const response = await fetch('/api/user/details');
+        if (response.ok) {
+          const data = await response.json();
+          setUserData(data);
+        }
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+      }
+    }
+    fetchUserData();
+  }, []);
 
   const sections = [
     {
@@ -134,7 +149,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
     ...(recommendations.startNext && recommendations.startNext.length > 0 ? [{
       title: "Start Next",
       icon: <Rocket className="h-4 sm:h-5 w-4 sm:w-5 text-amber-500" />,
-      description: `Subjects to start based on ${session?.user?.examName || "exam"}`,
+      description: `Subjects to start based on ${userData?.examName || "exam"}`,
       className: "bg-gradient-to-br from-amber-50/80 to-amber-100/80 dark:from-amber-900/20 dark:to-amber-800/20 backdrop-blur-md",
       emptyMessage: (
         <div className="flex flex-col items-center space-y-3 p-4 sm:p-6 rounded-lg bg-white/10">
@@ -252,7 +267,7 @@ export function SmartRecommendations({ subjects }: SmartRecommendationsProps) {
               <Sparkles className="h-5 sm:h-6 w-5 sm:w-6 text-blue-500 animate-pulse" />
             </div>
             <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-              Based on your progress and {session?.user?.examName || "exam"}
+              Based on your progress and {userData?.examName || "exam"}
             </p>
           </div>
         </div>

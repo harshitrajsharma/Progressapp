@@ -11,10 +11,10 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { CalendarIcon, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { User } from 'next-auth';
+import { useSession } from 'next-auth/react';
 
 interface ExamDetailsSectionProps {
-  user: User & {
+  user: {
     id: string;
     examName?: string | null;
     examDate?: Date | null;
@@ -22,6 +22,7 @@ interface ExamDetailsSectionProps {
 }
 
 export function ExamDetailsSection({ user }: ExamDetailsSectionProps) {
+  const { data: session, update: updateSession } = useSession();
   const [examName, setExamName] = useState(user.examName || '');
   const [examDate, setExamDate] = useState<Date | undefined>(
     user.examDate ? new Date(user.examDate) : undefined
@@ -33,11 +34,11 @@ export function ExamDetailsSection({ user }: ExamDetailsSectionProps) {
   useEffect(() => {
     setExamName(user.examName || '');
     setExamDate(user.examDate ? new Date(user.examDate) : undefined);
-  }, [user.examName, user.examDate]);
+  }, [user]);
 
   const handleSave = async () => {
     if (!examName || !examDate) {
-      toast.error('Please fill in all fields');
+      toast.error('Please fill in exam name and date');
       return;
     }
 
@@ -46,16 +47,39 @@ export function ExamDetailsSection({ user }: ExamDetailsSectionProps) {
       const response = await fetch('/api/user/exam-details', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ examName, examDate }),
+        body: JSON.stringify({
+          examName,
+          examDate: examDate.toISOString(),
+        }),
       });
 
-      if (!response.ok) throw new Error('Failed to update exam details');
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Failed to update exam details');
+      }
+
+      const updatedUser = await response.json();
+      
+      // Update the session with new user data
+      await updateSession({
+        ...session,
+        user: {
+          ...session?.user,
+          ...updatedUser,
+        },
+      });
+
+      // Clear cached user details to force a refresh
+      localStorage.removeItem('userDetails');
       
       toast.success('Exam details updated successfully');
       setIsEditing(false);
+
+      // Trigger a page refresh to update all components
+      window.location.reload();
     } catch (error) {
       console.error('Failed to update exam details:', error);
-      toast.error('Failed to update exam details');
+      toast.error(error instanceof Error ? error.message : 'Failed to update exam details');
     } finally {
       setIsSaving(false);
     }
@@ -91,6 +115,7 @@ export function ExamDetailsSection({ user }: ExamDetailsSectionProps) {
                   value={examName}
                   onChange={(e) => setExamName(e.target.value)}
                   placeholder="Enter your target exam name"
+                  required
                 />
               </div>
 

@@ -20,6 +20,9 @@ export async function GET() {
         emailVerified: true,
         examName: true,
         examDate: true,
+        targetScore: true,
+        totalMarks: true,
+        targetMarks: true,
         createdAt: true,
         settings: {
           select: {
