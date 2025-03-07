@@ -60,7 +60,12 @@ export function ExamCountdownDisplay({
 
     // Stage Determination Logic
     const determineStage = (): CountdownStage => {
-      if (totalDaysRemaining === 0) return 'imminent';
+      // Check if it's exam day by comparing year, month, and day
+      const isExamDay = examDate.getFullYear() === currentTime.getFullYear() &&
+                       examDate.getMonth() === currentTime.getMonth() &&
+                       examDate.getDate() === currentTime.getDate();
+
+      if (isExamDay) return 'imminent';
       if (totalDaysRemaining <= 3) return 'critical';
       if (totalDaysRemaining <= 14) return 'preparing';
       return 'distant';
@@ -106,7 +111,7 @@ export function ExamCountdownDisplay({
         icon: Trophy,
         color: 'text-yellow-500',
         primaryText: 'Exam Today',
-        secondaryText: 'Final moments! Believe in yourself 🍀',
+        secondaryText: 'All the best for the exam 🍀',
         urgency: 4
       }
     };
