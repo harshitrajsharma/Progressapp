@@ -44,7 +44,7 @@ export default function HeroSection() {
             </p>
 
             <p className="mt-6 text-lg text-muted-foreground backdrop-blur-sm">
-              <b>NOTE:</b> Just a CRUD app with calculation logic based on user's progress data. <br />
+              <b>NOTE:</b> Just a CRUD app with calculation logic based on user&apos;s progress data. <br />
             </p>
             
             <div className="mt-10 flex flex-col gap-4 sm:flex-row sm:gap-6">
@@ -62,17 +62,8 @@ export default function HeroSection() {
               </Link>
             </div>
             
-            <div className="mt-8 p-4 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/50">
-              <p className="text-sm text-muted-foreground">
-                Made with the help of{" "}
-                <Link href="https://anthropic.com/claude" target="_blank" className="text-primary hover:text-primary/80 transition-colors">
-                  Claude 3.5 Sonnet
-                </Link>{" "}
-                in{" "}
-                <Link href="https://cursor.com" target="_blank" className="text-primary hover:text-primary/80 transition-colors">
-                  Cursor IDE
-                </Link>
-              </p>
+            <div className="mt-8 p-4 space-y-2 bg-background/50 backdrop-blur-sm rounded-2xl border border-border/50">
+              <p className="text-sm text-muted-foreground">This app is a product of <span className=" text-lg text-white">Vibe Coding</span></p>
             </div>
           </div>
 

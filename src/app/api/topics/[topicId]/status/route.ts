@@ -132,6 +132,7 @@ export async function POST(
             name: true,
             subject: {
               select: {
+                id: true,
                 name: true
               }
             }
@@ -139,6 +140,21 @@ export async function POST(
         }
       }
     });
+
+    // Create TopicProgress record for the activity with actual timestamp
+    if ((type === 'learning' && updateData.learningStatus) || 
+        (type !== 'learning' && newValue > currentValue)) {
+      await prisma.topicProgress.create({
+        data: {
+          topicId: params.topicId,
+          userId: session.user.id,
+          subjectId: updatedTopic.chapter.subject.id,
+          type: type,
+          completed: true,
+          date: new Date() // Using actual completion time
+        }
+      });
+    }
 
     // Update completion status
     const completionStatus = {

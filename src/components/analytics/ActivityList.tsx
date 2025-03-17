@@ -5,7 +5,7 @@ import { Clock } from "lucide-react";
 import { format } from "date-fns";
 import { ActivityType, ACTIVITIES } from "./activity-config";
 import { cn } from "@/lib/utils";
-import { ActivityDetail } from "./types";
+import { ActivityDetail } from "@/app/api/analytics/types";
 import { TVAWarning } from "./TVAWarning";
 
 interface ActivityListProps {
@@ -56,7 +56,7 @@ export function ActivityList({
 
   return (
     <Card className="border border-border bg-card">
-      <ScrollArea className="h-[500px] lg:h-[600px]">
+      <ScrollArea className="h-[500px]">
         <div className="space-y-4 p-4">
           {isLoading ? (
             // Loading skeletons for activities

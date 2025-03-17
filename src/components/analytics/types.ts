@@ -1,4 +1,5 @@
 import { ActivityType } from "./activity-config";
+import { ReactNode } from 'react';
 
 export interface ActivityDetail {
   subject: string;
@@ -22,4 +23,13 @@ export interface CalendarActivity {
   totalCount: number;
   goalProgress: number;
   details: DailyActivityDetails;
+}
+
+export interface ActivityConfig {
+  icon: ReactNode;
+  label: string;
+  color: string;
+  bgColor: string;
+  bgColorFaded: string;
+  description: string;
 } 

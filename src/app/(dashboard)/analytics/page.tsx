@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { AnalyticsProvider } from '@/contexts/analytics-context';
+import { ProgressProvider } from '@/contexts/progress-context';
 import { CalendarView } from "@/components/analytics/CalendarView";
 import StudyTimelineSkeleton from '../../../components/skeletons/studytimeline-skeleton';
 
@@ -16,7 +17,8 @@ async function fetchExamDate(): Promise<Date | null> {
 }
 
 export default function AnalyticsPage() {
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  // Use initial date directly in the provider
+  const initialDate = new Date();
   
   const { data: examDate = null, isLoading } = useQuery({
     queryKey: ['examDate'],
@@ -33,11 +35,11 @@ export default function AnalyticsPage() {
 
   return (
     <div className="space-y-8">
-      <CalendarView
-        selectedDate={selectedDate}
-        onSelectDate={(date) => date && setSelectedDate(date)}
-        examDate={examDate}
-      />
+      <ProgressProvider>
+        <AnalyticsProvider initialDate={initialDate} examDate={examDate}>
+          <CalendarView />
+        </AnalyticsProvider>
+      </ProgressProvider>
     </div>
   );
 } 
